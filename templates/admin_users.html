@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin_users') }} - {{ t('admin_panel') }}{% endblock %}
+{% block extra_css %}
+<style>
+.admin-page { max-width:1300px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+.admin-topbar { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.admin-topbar h1 { font-size:1.8rem; font-family:var(--font-display); color:var(--green-900); margin:0; flex:1; }
+.admin-nav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; color:var(--gray-600); border:1.5px solid var(--gray-200); transition:.2s; background:white; }
+.admin-nav a:hover, .admin-nav a.active { background:var(--green-600); color:white; border-color:var(--green-600); }
+.search-bar { display:flex; gap:.75rem; margin-bottom:1.5rem; }
+.search-bar input { flex:1; padding:.7rem 1rem; border:1.5px solid var(--gray-200); border-radius:10px; font-size:.9rem; outline:none; }
+.search-bar input:focus { border-color:var(--green-400); }
+.users-table-wrap { background:white; border-radius:16px; border:1px solid var(--gray-200); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow-x:auto; }
+.users-table { width:100%; border-collapse:collapse; min-width:900px; }
+.users-table th { background:var(--green-700); color:white; padding:.75rem 1rem; font-size:.78rem; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.users-table td { padding:.8rem 1rem; border-top:1px solid var(--gray-100); font-size:.85rem; color:var(--gray-700); vertical-align:middle; }
+.users-table tr:hover td { background:var(--green-50); }
+.badge { font-size:.7rem; padding:.2rem .55rem; border-radius:5px; font-weight:700; }
+.badge-admin { background:#7c3aed; color:white; }
+.badge-user { background:var(--green-100); color:var(--green-700); }
+.badge-free { background:var(--gray-100); color:var(--gray-600); }
+.badge-basic { background:#dcfce7; color:#15803d; }
+.badge-pro { background:#fef9c3; color:#a16207; }
+.badge-enterprise { background:#ede9fe; color:#7c3aed; }
+.action-btns { display:flex; gap:.4rem; flex-wrap:wrap; }
+.btn-xs { padding:.25rem .6rem; border-radius:6px; font-size:.75rem; font-weight:600; text-decoration:none; border:none; cursor:pointer; transition:.2s; white-space:nowrap; }
+.btn-xs-green { background:var(--green-100); color:var(--green-700); }
+.btn-xs-green:hover { background:var(--green-200); }
+.btn-xs-purple { background:#ede9fe; color:#7c3aed; }
+.btn-xs-purple:hover { background:#ddd6fe; }
+.btn-xs-red { background:#fee2e2; color:#dc2626; }
+.btn-xs-red:hover { background:#fecaca; }
+.btn-xs-orange { background:#ffedd5; color:#c2410c; }
+.btn-xs-orange:hover { background:#fed7aa; }
+.pw-reveal { font-family:monospace; font-size:.72rem; color:var(--gray-400); }
+.pw-hash { display:inline-block; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; font-family:monospace; font-size:.7rem; color:var(--gray-400); }
+.credit-edit-form { display:flex; gap:.3rem; align-items:center; }
+.credit-edit-form input { width:70px; padding:.2rem .4rem; border:1px solid var(--gray-300); border-radius:5px; font-size:.8rem; }
+.user-count { font-size:.88rem; color:var(--gray-500); margin-bottom:1rem; }
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9000; align-items:center; justify-content:center; }
+.modal-bg.open { display:flex; }
+.modal-box { background:white; border-radius:16px; padding:2rem; max-width:400px; width:90%; text-align:center; }
+.modal-box h3 { color:#dc2626; margin:0 0 .75rem; }
+.modal-box p { color:var(--gray-600); font-size:.9rem; margin:0 0 1.5rem; }
+.modal-actions { display:flex; gap:.75rem; justify-content:center; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+
+    <div class="admin-topbar">
+        <div>
+            <p style="margin:0;font-size:.8rem;color:var(--gray-400)">Admin Panel</p>
+            <h1>👥 {{ t('admin_users') }}</h1>
+        </div>
+        <a href="/admin/create-admin" class="btn btn-primary"><i class="fas fa-plus"></i> {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <!-- Admin Nav -->
+    <div class="admin-nav">
+        <a href="/admin">📊 {{ t('admin_dashboard') }}</a>
+        <a href="/admin/users" class="active">👥 {{ t('admin_users') }}</a>
+        <a href="/admin/predictions">🔬 {{ t('admin_predictions') }}</a>
+        <a href="/admin/feedback">⭐ {{ t('admin_feedback') }}</a>
+        <a href="/admin/contacts">📬 {{ t('admin_contacts') }}</a>
+        <a href="/admin/create-admin" style="background:#7c3aed;color:white;border-color:#7c3aed">➕ {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <!-- Search -->
+    <form class="search-bar" method="GET">
+        <input type="text" name="q" value="{{ search }}" placeholder="🔍 Search by name or email...">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if search %}<a href="/admin/users" class="btn btn-outline" style="color:var(--gray-600);border-color:var(--gray-300)">Clear</a>{% endif %}
+    </form>
+
+    <div class="user-count">
+        Showing <strong>{{ users|length }}</strong> user(s){% if search %} matching "<strong>{{ search }}</strong>"{% endif %}
+    </div>
+
+    <div class="users-table-wrap">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Name &amp; Email</th>
+                    <th>Password Hash</th>
+                    <th>Role</th>
+                    <th>Plan</th>
+                    <th>Credits</th>
+                    <th>Scans</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr id="user-row-{{ u.id }}">
+                    <td style="color:var(--gray-400);font-size:.78rem">#{{ u.id }}</td>
+                    <td>
+                        <div style="font-weight:700;color:var(--gray-900)">{{ u.name }}</div>
+                        <div style="color:var(--gray-400);font-size:.78rem">{{ u.email }}</div>
+                    </td>
+                    <td>
+                        <span class="pw-hash" title="{{ u.password_hash }}">{{ u.password_hash[:20] }}…</span>
+                        <button onclick="copyHash('{{ u.password_hash }}')" class="btn-xs btn-xs-orange" title="Copy full hash">📋</button>
+                    </td>
+                    <td>
+                        {% if u.is_admin %}<span class="badge badge-admin">🛡️ Admin</span>
+                        {% else %}<span class="badge badge-user">👤 User</span>{% endif %}
+                    </td>
+                    <td><span class="badge badge-{{ u.plan }}">{{ u.plan }}</span></td>
+                    <td>
+                        <!-- Inline credit editor -->
+                        <form action="/admin/reset-credits/{{ u.id }}" method="POST" class="credit-edit-form">
+                            <input type="number" name="credits" value="{{ u.credits }}" min="0" max="99999">
+                            <button type="submit" class="btn-xs btn-xs-green" title="Save credits">💾</button>
+                        </form>
+                    </td>
+                    <td style="text-align:center">{{ u.scan_count }}</td>
+                    <td style="font-size:.78rem;color:var(--gray-400)">{{ u.created_at[:10] if u.created_at else '—' }}</td>
+                    <td>
+                        <div class="action-btns">
+                            {% if u.is_admin %}
+                            <a href="/admin/remove-admin/{{ u.id }}" class="btn-xs btn-xs-orange"
+                               onclick="return confirm('Remove admin from {{ u.name }}?')">
+                                🔽 Demote
+                            </a>
+                            {% else %}
+                            <a href="/admin/make-admin/{{ u.id }}" class="btn-xs btn-xs-purple"
+                               onclick="return confirm('Make {{ u.name }} an admin?')">
+                                🛡️ Make Admin
+                            </a>
+                            {% endif %}
+
+                            {% if u.id != user.id %}
+                            <button class="btn-xs btn-xs-red" onclick="confirmDelete({{ u.id }}, '{{ u.name }}')">
+                                🗑️ Delete
+                            </button>
+                            {% else %}
+                            <span style="font-size:.72rem;color:var(--gray-400)">(you)</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:2rem">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-bg" id="deleteModal">
+    <div class="modal-box">
+        <h3>🗑️ Delete User</h3>
+        <p id="deleteMsg">Are you sure you want to delete this user? All their predictions will also be deleted. This cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()" style="color:var(--gray-600);border-color:var(--gray-300)">Cancel</button>
+            <form id="deleteForm" method="POST">
+                <button type="submit" class="btn" style="background:#dc2626;color:white">Yes, Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(uid, name) {
+    document.getElementById('deleteMsg').textContent = `Delete user "${name}"? All their predictions will also be removed. This cannot be undone.`;
+    document.getElementById('deleteForm').action = `/admin/delete-user/${uid}`;
+    document.getElementById('deleteModal').classList.add('open');
+}
+function closeModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+}
+function copyHash(hash) {
+    navigator.clipboard.writeText(hash).then(() => alert('Password hash copied!'));
+}
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

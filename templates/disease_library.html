@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ t('lib_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <span class="section-label" style="color:var(--green-300)">{{ t('lib_label') }}</span>
+    <h1>{{ t('lib_title') }}</h1>
+    <p>{{ t('lib_sub') }}</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <!-- Filter Buttons -->
+        <div class="library-filter">
+            <button class="filter-btn active" data-filter="all">{{ t('all_crops') }}</button>
+            {% for key, module in disease_data.items() %}
+            <button class="filter-btn" data-filter="{{ key }}">{{ module.icon }} {{ module.name }}</button>
+            {% endfor %}
+        </div>
+
+        <!-- Accordion -->
+        <div class="disease-accordion">
+            {% for key, module in disease_data.items() %}
+            {% for disease, info in module.treatments.items() %}
+            <div class="accordion-item" data-module="{{ key }}">
+                <div class="accordion-header">
+                    <div class="accordion-title">
+                        <span class="accordion-icon">{{ module.icon }}</span>
+                        <div>
+                            <strong>{{ disease }}</strong>
+                            <div style="font-size:.75rem;color:var(--gray-400);margin-top:.2rem">{{ module.name }}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:1rem">
+                        <span class="severity-badge sev-{{ info.severity }}">{{ info.severity }}</span>
+                        <i class="fas fa-chevron-down accordion-chevron"></i>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="info-grid" style="margin-bottom:1rem">
+                        <div class="info-card">
+                            <label>{{ t('pathogen_cause') }}</label>
+                            <p>{{ info.cause }}</p>
+                        </div>
+                        <div class="info-card">
+                            <label>{{ t('severity_label') }}</label>
+                            <p><span class="severity-badge sev-{{ info.severity }}">{{ info.severity }}</span></p>
+                        </div>
+                    </div>
+                    <div class="info-card" style="margin-bottom:1rem">
+                        <label>{{ t('symptoms_label') }}</label>
+                        <p>{{ info.symptoms }}</p>
+                    </div>
+                    {% if disease != 'Healthy' %}
+                    <div class="treatment-box">
+                        <h4><i class="fas fa-prescription-bottle"></i> {{ t('treatment_prev') }}</h4>
+                        <p class="treat-label">{{ t('treatment_label') }}</p>
+                        <p>{{ info.treatment }}</p>
+                        <p class="treat-label" style="margin-top:.75rem">{{ t('prevention_label') }}</p>
+                        <p>{{ info.prevention }}</p>
+                    </div>
+                    {% endif %}
+                    <div style="margin-top:1rem">
+                        <a href="/predict/{{ key }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-camera"></i> {{ t('detect_this') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

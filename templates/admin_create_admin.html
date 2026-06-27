@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin_create_admin') }} - {{ t('admin_panel') }}{% endblock %}
+{% block extra_css %}
+<style>
+.admin-page { max-width:600px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+.admin-nav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; color:var(--gray-600); border:1.5px solid var(--gray-200); transition:.2s; background:white; }
+.admin-nav a:hover, .admin-nav a.active { background:var(--green-600); color:white; border-color:var(--green-600); }
+.form-card { background:white; border-radius:20px; border:2px solid #7c3aed; padding:2.5rem; box-shadow:0 8px 32px rgba(124,58,237,.1); }
+.form-card h2 { font-family:var(--font-display); color:#5b21b6; margin:0 0 .5rem; font-size:1.5rem; }
+.form-card p { color:var(--gray-500); font-size:.9rem; margin:0 0 2rem; }
+.field { margin-bottom:1.25rem; }
+.field label { display:block; font-size:.85rem; font-weight:600; color:var(--gray-700); margin-bottom:.4rem; }
+.field input { width:100%; padding:.75rem 1rem; border:1.5px solid var(--gray-200); border-radius:10px; font-size:.95rem; outline:none; transition:.2s; box-sizing:border-box; }
+.field input:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.1); }
+.warning-box { background:#fef3c7; border:1.5px solid #f59e0b; border-radius:12px; padding:1rem; font-size:.85rem; color:#92400e; margin-bottom:1.5rem; display:flex; gap:.75rem; }
+.btn-purple { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:white; border:none; padding:.85rem 2rem; border-radius:12px; font-weight:700; font-size:.95rem; cursor:pointer; width:100%; transition:.2s; }
+.btn-purple:hover { background:linear-gradient(135deg,#6d28d9,#4c1d95); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+    <div style="margin-bottom:1.5rem">
+        <p style="margin:0;font-size:.8rem;color:var(--gray-400)">Admin Panel</p>
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--green-900);margin:.2rem 0 0">🛡️ {{ t('admin_create_admin') }}</h1>
+    </div>
+
+    <div class="admin-nav">
+        <a href="/admin">📊 {{ t('admin_dashboard') }}</a>
+        <a href="/admin/users">👥 {{ t('admin_users') }}</a>
+        <a href="/admin/predictions">🔬 {{ t('admin_predictions') }}</a>
+        <a href="/admin/feedback">⭐ {{ t('admin_feedback') }}</a>
+        <a href="/admin/contacts">📬 {{ t('admin_contacts') }}</a>
+        <a href="/admin/create-admin" class="active" style="background:#7c3aed;color:white;border-color:#7c3aed">➕ {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <div class="form-card">
+        <h2>🛡️ {{ t('admin_create_admin') }}</h2>
+        <p>Create a new administrator account. Admin users have full access to the admin panel, all user data, and site management.</p>
+
+        <div class="warning-box">
+            <span style="font-size:1.2rem">⚠️</span>
+            <div>Admin accounts have full access to all user data. Only create admin accounts for trusted team members.</div>
+        </div>
+
+        <form method="POST">
+            <div class="field">
+                <label>Full Name *</label>
+                <input type="text" name="name" required placeholder="e.g. Rahul Patil">
+            </div>
+            <div class="field">
+                <label>Email Address *</label>
+                <input type="email" name="email" required placeholder="admin@kisanmitra.in">
+            </div>
+            <div class="field">
+                <label>Password * (min. 6 characters)</label>
+                <input type="password" name="password" required placeholder="Strong password">
+            </div>
+            <div class="field">
+                <label>Confirm Password *</label>
+                <input type="password" name="confirm_password" required placeholder="Repeat password">
+            </div>
+            <button type="submit" class="btn-purple">
+                🛡️ {{ t('admin_create_admin') }}
+            </button>
+        </form>
+    </div>
+
+    <div style="margin-top:1rem;text-align:center">
+        <a href="/admin/users" style="color:var(--gray-500);font-size:.85rem;text-decoration:none">
+            ← Back to Users List
+        </a>
+    </div>
+</div>
+{% endblock %}

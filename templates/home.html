@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}KisanMitra - AI Crop Disease Detection | किसान मित्र{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge fade-in-up">{{ t('hero_badge') }}</div>
+            <h1 class="hero-title fade-in-up">{{ t('hero_title') }}</h1>
+            <p class="hero-subtitle fade-in-up">{{ t('hero_subtitle') }}</p>
+            <div class="hero-actions fade-in-up">
+                <a href="/predict" class="btn btn-primary btn-lg"><i class="fas fa-camera"></i> {{ t('hero_btn_detect') }}</a>
+                <a href="/disease-library" class="btn btn-outline btn-lg"><i class="fas fa-book-open"></i> {{ t('hero_btn_library') }}</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><span class="stat-num" data-target="8">0</span><span class="stat-label">{{ t('stat_crops') }}</span></div>
+                <div class="hero-stat"><span class="stat-num" data-target="{{ stats.total_predictions or 1240 }}">0</span><span class="stat-label">{{ t('stat_predictions') }}</span></div>
+                <div class="hero-stat"><span class="stat-num" data-target="38">0</span><span class="stat-label">{{ t('stat_diseases') }}</span></div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-card-grid">
+                {% for key, module in disease_data.items() %}
+                <a href="/predict/{{ key }}" class="hero-module-card">
+                    <span class="mod-icon">{{ module.icon }}</span>
+                    <div class="mod-name">{{ module.name }}</div>
+                    <div class="mod-count">{{ module.classes|length - 1 }} {{ t('diseases') }}</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">{{ t('home_why_label') }}</span>
+            <h2 class="section-title">{{ t('home_why_title') }}</h2>
+            <p class="section-subtitle">{{ t('home_why_sub') }}</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card"><div class="feature-icon">🤖</div><h3>{{ t('feat1_title') }}</h3><p>{{ t('feat1_desc') }}</p></div>
+            <div class="feature-card"><div class="feature-icon">💊</div><h3>{{ t('feat2_title') }}</h3><p>{{ t('feat2_desc') }}</p></div>
+            <div class="feature-card"><div class="feature-icon">🌿</div><h3>{{ t('feat3_title') }}</h3><p>{{ t('feat3_desc') }}</p></div>
+            <div class="feature-card"><div class="feature-icon">🌦️</div><h3>{{ t('feat4_title') }}</h3><p>{{ t('feat4_desc') }}</p></div>
+            <div class="feature-card"><div class="feature-icon">📅</div><h3>{{ t('feat5_title') }}</h3><p>{{ t('feat5_desc') }}</p></div>
+            <div class="feature-card"><div class="feature-icon">📚</div><h3>{{ t('feat6_title') }}</h3><p>{{ t('feat6_desc') }}</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- Modules -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">{{ t('modules_label') }}</span>
+            <h2 class="section-title">{{ t('modules_title') }}</h2>
+            <p class="section-subtitle">{{ t('modules_sub') }}</p>
+        </div>
+        <div class="modules-grid">
+            {% for key, module in disease_data.items() %}
+            <a href="/predict/{{ key }}" class="module-card">
+                <div class="module-card-img">{{ module.icon }}</div>
+                <div class="module-card-body">
+                    <h3>{{ module.name }}</h3>
+                    <p>{{ t('detects') }} {{ module.classes|length - 1 }} {{ t('diseases') }}</p>
+                    <span class="module-card-tag">{{ module.classes|length - 1 }} {{ t('conditions') }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="section section-dark">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label" style="color:var(--green-300)">{{ t('how_label') }}</span>
+            <h2 class="section-title">{{ t('how_title') }}</h2>
+            <p class="section-subtitle">{{ t('how_sub') }}</p>
+        </div>
+        <div class="features-grid" style="max-width:900px;margin:0 auto">
+            <div class="feature-card" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)">
+                <div class="feature-icon" style="background:rgba(56,161,105,.2)">📸</div>
+                <h3 style="color:var(--white)">{{ t('step1_title') }}</h3><p>{{ t('step1_desc') }}</p>
+            </div>
+            <div class="feature-card" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)">
+                <div class="feature-icon" style="background:rgba(56,161,105,.2)">🧠</div>
+                <h3 style="color:var(--white)">{{ t('step2_title') }}</h3><p>{{ t('step2_desc') }}</p>
+            </div>
+            <div class="feature-card" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1)">
+                <div class="feature-icon" style="background:rgba(56,161,105,.2)">💡</div>
+                <h3 style="color:var(--white)">{{ t('step3_title') }}</h3><p>{{ t('step3_desc') }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">{{ t('impact_label') }}</span>
+            <h2 class="section-title">{{ t('impact_title') }}</h2>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box" style="background:var(--green-100);border-color:var(--green-200)"><span class="s-num" style="color:var(--green-700)" data-target="8">0</span><span class="s-lbl" style="color:var(--green-600)">{{ t('stat_crops') }}</span></div>
+            <div class="stat-box" style="background:var(--green-100);border-color:var(--green-200)"><span class="s-num" style="color:var(--green-700)" data-target="38">0</span><span class="s-lbl" style="color:var(--green-600)">{{ t('stat_diseases') }}</span></div>
+            <div class="stat-box" style="background:var(--green-100);border-color:var(--green-200)"><span class="s-num" style="color:var(--green-700)" data-target="95">0</span><span class="s-lbl" style="color:var(--green-600)">{{ t('accuracy_label') }}</span></div>
+            <div class="stat-box" style="background:var(--green-100);border-color:var(--green-200)"><span class="s-num" style="color:var(--green-700)" data-target="{{ stats.total_predictions or 1240 }}">0</span><span class="s-lbl" style="color:var(--green-600)">{{ t('total_pred_label') }}</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="section" style="background:linear-gradient(135deg,var(--green-800),var(--green-600));text-align:center">
+    <div class="container">
+        <h2 style="font-family:var(--font-display);font-size:2.5rem;color:var(--white);margin-bottom:1rem">{{ t('cta_title') }}</h2>
+        <p style="color:rgba(255,255,255,.75);font-size:1.1rem;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">{{ t('cta_sub') }}</p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+            <a href="/predict" class="btn btn-lg" style="background:var(--white);color:var(--green-700)"><i class="fas fa-leaf"></i> {{ t('try_detection') }}</a>
+            <a href="/feedback" class="btn btn-outline btn-lg"><i class="fas fa-star"></i> {{ t('share_feedback') }}</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

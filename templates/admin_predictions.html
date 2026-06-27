@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin_predictions') }} - {{ t('admin_panel') }}{% endblock %}
+{% block extra_css %}
+<style>
+.admin-page { max-width:1200px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+.admin-nav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; color:var(--gray-600); border:1.5px solid var(--gray-200); transition:.2s; background:white; }
+.admin-nav a:hover, .admin-nav a.active { background:var(--green-600); color:white; border-color:var(--green-600); }
+.table-wrap { background:white; border-radius:16px; border:1px solid var(--gray-200); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow-x:auto; }
+.pred-table { width:100%; border-collapse:collapse; min-width:750px; }
+.pred-table th { background:var(--green-700); color:white; padding:.75rem 1rem; font-size:.78rem; text-align:left; font-weight:700; text-transform:uppercase; }
+.pred-table td { padding:.75rem 1rem; border-top:1px solid var(--gray-100); font-size:.85rem; color:var(--gray-700); vertical-align:middle; }
+.pred-table tr:hover td { background:var(--green-50); }
+.badge { font-size:.7rem; padding:.2rem .5rem; border-radius:5px; font-weight:700; }
+.b-crop { background:var(--green-100); color:var(--green-700); }
+.b-healthy { background:#dcfce7; color:#15803d; }
+.b-disease { background:#fee2e2; color:#991b1b; }
+.conf-bar { width:80px; height:8px; background:var(--gray-100); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; }
+.conf-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#22c55e,#16a34a); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+    <div style="margin-bottom:1.5rem">
+        <p style="margin:0;font-size:.8rem;color:var(--gray-400)">Admin Panel</p>
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--green-900);margin:.2rem 0 0">🔬 {{ t('admin_predictions') }}</h1>
+    </div>
+
+    <div class="admin-nav">
+        <a href="/admin">📊 {{ t('admin_dashboard') }}</a>
+        <a href="/admin/users">👥 {{ t('admin_users') }}</a>
+        <a href="/admin/predictions" class="active">🔬 {{ t('admin_predictions') }}</a>
+        <a href="/admin/feedback">⭐ {{ t('admin_feedback') }}</a>
+        <a href="/admin/contacts">📬 {{ t('admin_contacts') }}</a>
+        <a href="/admin/create-admin" style="background:#7c3aed;color:white;border-color:#7c3aed">➕ {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <div style="font-size:.88rem;color:var(--gray-500);margin-bottom:1rem">{{ preds|length }} prediction(s) (latest 200)</div>
+
+    <div class="table-wrap">
+        <table class="pred-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Crop Module</th>
+                    <th>Disease Detected</th>
+                    <th>Confidence</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in preds %}
+                <tr>
+                    <td style="color:var(--gray-400);font-size:.78rem">{{ p.id }}</td>
+                    <td>
+                        <div style="font-weight:600">{{ p.user_name or 'Guest' }}</div>
+                        <div style="font-size:.75rem;color:var(--gray-400)">{{ p.user_email or '' }}</div>
+                    </td>
+                    <td><span class="badge b-crop">{{ p.module }}</span></td>
+                    <td>
+                        <span class="badge {% if p.disease|lower == 'healthy' %}b-healthy{% else %}b-disease{% endif %}">
+                            {{ p.disease }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:.5rem">
+                            <div class="conf-bar"><div class="conf-fill" style="width:{{ '%.0f'|format(p.confidence * 100) }}%"></div></div>
+                            <span style="font-size:.8rem;font-weight:600">{{ '%.0f'|format(p.confidence * 100) }}%</span>
+                        </div>
+                    </td>
+                    <td style="font-size:.78rem;color:var(--gray-400)">{{ p.created_at[:16] if p.created_at else '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:2rem">No predictions yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

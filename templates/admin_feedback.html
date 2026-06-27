@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin_feedback') }} - {{ t('admin_panel') }}{% endblock %}
+{% block extra_css %}
+<style>
+.admin-page { max-width:1100px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+.admin-nav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; color:var(--gray-600); border:1.5px solid var(--gray-200); transition:.2s; background:white; }
+.admin-nav a:hover, .admin-nav a.active { background:var(--green-600); color:white; border-color:var(--green-600); }
+.fb-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; }
+.fb-card { background:white; border-radius:14px; border:1px solid var(--gray-200); padding:1.25rem; box-shadow:0 2px 6px rgba(0,0,0,.04); }
+.fb-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.75rem; }
+.fb-name { font-weight:700; color:var(--gray-800); font-size:.95rem; }
+.fb-email { color:var(--gray-400); font-size:.78rem; }
+.fb-stars { color:#f59e0b; font-size:1rem; }
+.fb-msg { color:var(--gray-600); font-size:.88rem; line-height:1.6; border-left:3px solid var(--green-300); padding-left:.75rem; }
+.fb-date { color:var(--gray-400); font-size:.75rem; margin-top:.75rem; }
+.empty-state { text-align:center; padding:4rem; color:var(--gray-400); }
+.stats-row { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.stat-pill { background:white; border:1px solid var(--gray-200); border-radius:10px; padding:.5rem 1rem; font-size:.85rem; }
+.stat-pill strong { color:var(--green-700); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+    <div style="margin-bottom:1.5rem">
+        <p style="margin:0;font-size:.8rem;color:var(--gray-400)">Admin Panel</p>
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--green-900);margin:.2rem 0 0">⭐ {{ t('admin_feedback') }}</h1>
+    </div>
+
+    <div class="admin-nav">
+        <a href="/admin">📊 {{ t('admin_dashboard') }}</a>
+        <a href="/admin/users">👥 {{ t('admin_users') }}</a>
+        <a href="/admin/predictions">🔬 {{ t('admin_predictions') }}</a>
+        <a href="/admin/feedback" class="active">⭐ {{ t('admin_feedback') }}</a>
+        <a href="/admin/contacts">📬 {{ t('admin_contacts') }}</a>
+        <a href="/admin/create-admin" style="background:#7c3aed;color:white;border-color:#7c3aed">➕ {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-pill">Total: <strong>{{ feedbacks|length }}</strong></div>
+        {% if feedbacks %}
+        <div class="stat-pill">Avg Rating: <strong>{{ '%.1f'|format(feedbacks|sum(attribute='rating') / feedbacks|length) }} ⭐</strong></div>
+        {% endif %}
+    </div>
+
+    {% if feedbacks %}
+    <div class="fb-grid">
+        {% for fb in feedbacks %}
+        <div class="fb-card">
+            <div class="fb-card-head">
+                <div>
+                    <div class="fb-name">{{ fb.name }}</div>
+                    <div class="fb-email">{{ fb.email }}</div>
+                </div>
+                <div class="fb-stars">
+                    {% for i in range(fb.rating|int) %}★{% endfor %}{% for i in range(5 - fb.rating|int) %}☆{% endfor %}
+                    <span style="font-size:.75rem;color:var(--gray-500)"> {{ fb.rating }}/5</span>
+                </div>
+            </div>
+            <div class="fb-msg">{{ fb.message }}</div>
+            <div class="fb-date"><i class="fas fa-clock"></i> {{ fb.created_at[:16] if fb.created_at else '—' }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div style="font-size:3rem;margin-bottom:1rem">⭐</div>
+        <p>No feedback received yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

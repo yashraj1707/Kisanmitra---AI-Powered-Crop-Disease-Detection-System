@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Predict Disease - KisanMitra{% endblock %}
+{% block content %}
+
+<script>
+const CROP_META_SELECT = {
+  tomato:  { temp:"20–30°C", soil:"Well-drained loamy, pH 6–7", water:"Regular, avoid waterlogging", season:"Kharif & Rabi", commonDiseases:["Late Blight","Early Blight","Leaf Mold","Bacterial Spot","Septoria Leaf Spot"] },
+  potato:  { temp:"15–25°C", soil:"Sandy loam, pH 5.5–6.5",    water:"Consistent, avoid waterlogging", season:"Rabi (Oct–Mar)", commonDiseases:["Late Blight","Early Blight"] },
+  corn:    { temp:"21–32°C", soil:"Deep loamy, pH 5.8–7",       water:"Critical at silking & tasseling", season:"Kharif (Jun–Oct)", commonDiseases:["Cercospora Leaf Spot","Common Rust","Northern Leaf Blight"] },
+  grape:   { temp:"15–30°C", soil:"Sandy loam, pH 6–6.5",       water:"Moderate, avoid wetting foliage", season:"Perennial, harvest Jan–Mar", commonDiseases:["Black Rot","Esca","Leaf Blight"] },
+  apple:   { temp:"12–25°C", soil:"Well-drained loamy, pH 6–7", water:"Regular, drip preferred", season:"Harvest Jul–Oct (hills)", commonDiseases:["Apple Scab","Black Rot","Cedar Apple Rust"] },
+  rice:    { temp:"22–30°C", soil:"Clay/clay loam, pH 5.5–6.5", water:"Flooded (5–10 cm standing water)", season:"Kharif (Jun–Nov)", commonDiseases:["Bacterial Leaf Blight","Brown Spot","Leaf Smut"] },
+  wheat:   { temp:"12–25°C", soil:"Well-drained loamy, pH 6–7.5", water:"At crown root, tillering, grain fill", season:"Rabi (Nov–Apr)", commonDiseases:["Leaf Rust","Stem Rust","Yellow Rust","Powdery Mildew"] },
+  mango:   { temp:"24–30°C", soil:"Deep well-drained loamy, pH 5.5–7.5", water:"Less at flowering, more at fruiting", season:"Harvest Apr–Jun", commonDiseases:["Anthracnose","Powdery Mildew","Bacterial Black Spot"] }
+};
+</script>
+
+<div class="page-header">
+    <span class="section-label" style="color:var(--green-300)">AI Detection</span>
+    <h1>🔬 Crop Disease Detection</h1>
+    <p>Select your crop below and upload a leaf/fruit image for instant AI-powered disease diagnosis</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="info-banner" style="border-radius:var(--radius-md);margin-bottom:2rem">
+            📷 <strong>Tip:</strong> For best results, take a clear close-up photo of the affected area in good lighting. Avoid blurry images.
+        </div>
+
+        <!-- Layout: grid + info panel -->
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start">
+
+            <!-- LEFT: crop grid -->
+            <div>
+                <div class="section-header" style="text-align:left">
+                    <span class="section-label">Step 1</span>
+                    <h2 class="section-title">Choose Your Crop</h2>
+                    <p class="section-subtitle">Hover over a crop to preview its info, then click to start detection</p>
+                </div>
+                <div class="modules-grid">
+                    {% for key, module in disease_data.items() %}
+                    <a href="/predict/{{ key }}" class="module-card" data-crop="{{ key }}"
+                       onmouseenter="showCropInfo('{{ key }}','{{ module.icon }}','{{ module.name }}')"
+                       onfocus="showCropInfo('{{ key }}','{{ module.icon }}','{{ module.name }}')"
+                    >
+                        <div class="module-card-img" style="height:140px;font-size:4.5rem">{{ module.icon }}</div>
+                        <div class="module-card-body">
+                            <h3>{{ module.name }}</h3>
+                            <p>Detects {{ module.classes|length - 1 }} diseases</p>
+                            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
+                                {% for c in module.classes[:3] %}
+                                <span style="background:var(--green-50);color:var(--green-700);padding:.15rem .5rem;border-radius:4px;font-size:.68rem">{{ c }}</span>
+                                {% endfor %}
+                                {% if module.classes|length > 4 %}
+                                <span style="background:var(--gray-100);color:var(--gray-500);padding:.15rem .5rem;border-radius:4px;font-size:.68rem">+{{ module.classes|length - 3 }} more</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- RIGHT: sticky info panel -->
+            <div style="position:sticky;top:90px">
+
+                <!-- Default state (no crop selected) -->
+                <div id="cropInfoDefault" style="background:var(--green-50);border:2px dashed var(--green-300);border-radius:var(--radius-xl);padding:2rem;text-align:center;color:var(--green-700)">
+                    <div style="font-size:3rem;margin-bottom:1rem">🌾</div>
+                    <p style="font-weight:600;margin-bottom:.4rem">Hover over a crop</p>
+                    <p style="font-size:.88rem;color:var(--green-600)">to see ideal growing conditions and common diseases</p>
+                </div>
+
+                <!-- Crop info card (filled by JS) -->
+                <div id="cropInfoCard" style="display:none;background:white;border:2px solid var(--green-300);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-md)">
+                    <!-- Header -->
+                    <div style="background:linear-gradient(135deg,var(--green-600),var(--green-800));padding:1.25rem 1.5rem;display:flex;align-items:center;gap:.75rem">
+                        <span id="ci2-icon" style="font-size:2.2rem"></span>
+                        <div>
+                            <div style="color:rgba(255,255,255,.7);font-size:.72rem;font-family:var(--font-mono)">CROP INFO</div>
+                            <div id="ci2-name" style="color:white;font-weight:700;font-size:1.15rem"></div>
+                        </div>
+                    </div>
+
+                    <!-- Info rows -->
+                    <div style="padding:1.25rem 1.5rem">
+                        <div style="display:grid;gap:.75rem">
+
+                            <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.6rem;background:var(--gray-50);border-radius:8px">
+                                <span style="font-size:1.1rem;flex-shrink:0">🌡️</span>
+                                <div>
+                                    <div style="font-size:.68rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.15rem">IDEAL TEMPERATURE</div>
+                                    <div id="ci2-temp" style="font-weight:600;font-size:.9rem;color:var(--gray-800)"></div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.6rem;background:var(--gray-50);border-radius:8px">
+                                <span style="font-size:1.1rem;flex-shrink:0">🌱</span>
+                                <div>
+                                    <div style="font-size:.68rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.15rem">SOIL TYPE</div>
+                                    <div id="ci2-soil" style="font-weight:600;font-size:.9rem;color:var(--gray-800)"></div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.6rem;background:var(--gray-50);border-radius:8px">
+                                <span style="font-size:1.1rem;flex-shrink:0">💧</span>
+                                <div>
+                                    <div style="font-size:.68rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.15rem">WATER NEEDS</div>
+                                    <div id="ci2-water" style="font-weight:600;font-size:.9rem;color:var(--gray-800)"></div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.6rem;background:var(--gray-50);border-radius:8px">
+                                <span style="font-size:1.1rem;flex-shrink:0">📅</span>
+                                <div>
+                                    <div style="font-size:.68rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.15rem">GROWING SEASON</div>
+                                    <div id="ci2-season" style="font-weight:600;font-size:.9rem;color:var(--gray-800)"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Common diseases -->
+                        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--gray-100)">
+                            <div style="font-size:.68rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.5rem">🦠 COMMON DISEASES</div>
+                            <div id="ci2-diseases" style="display:flex;flex-wrap:wrap;gap:.35rem"></div>
+                        </div>
+
+                        <!-- CTA -->
+                        <div id="ci2-cta" style="margin-top:1.25rem">
+                            <!-- Filled by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live weather mini-widget -->
+                <div id="weatherMini" style="display:none;margin-top:1rem;background:linear-gradient(135deg,#1e3a5f,#0f4c75);border-radius:var(--radius-lg);padding:1rem 1.25rem;color:white">
+                    <div style="font-size:.7rem;color:rgba(255,255,255,.5);font-family:var(--font-mono);margin-bottom:.5rem">📡 LIVE WEATHER</div>
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <span id="wmIcon" style="font-size:1.8rem">🌤</span>
+                        <div>
+                            <div id="wmTemp" style="font-weight:700;font-size:1.2rem"></div>
+                            <div id="wmDesc" style="font-size:.78rem;color:rgba(255,255,255,.65)"></div>
+                        </div>
+                        <div style="margin-left:auto;text-align:right">
+                            <div id="wmHumidity" style="font-size:.85rem;font-weight:600"></div>
+                            <div style="font-size:.7rem;color:rgba(255,255,255,.5)">humidity</div>
+                        </div>
+                    </div>
+                    <div id="wmRisk" style="margin-top:.75rem;font-size:.8rem;padding:.5rem .75rem;border-radius:6px;background:rgba(255,255,255,.12);line-height:1.5;display:none"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+let weatherData = null;
+let lastCropKey = null;
+
+// ── WMO helper (same as main.js) ──────────────────────────────────────
+function wmoIcon(code) {
+    if (code === 0)  return '☀️';
+    if (code <= 2)   return '🌤';
+    if (code === 3)  return '☁️';
+    if (code <= 49)  return '🌫';
+    if (code <= 65)  return '🌧';
+    if (code <= 77)  return '🌨';
+    if (code <= 82)  return '🌧';
+    if (code <= 99)  return '⛈';
+    return '🌤';
+}
+function wmoDesc(code) {
+    if (code === 0)  return 'Clear Sky';
+    if (code <= 2)   return 'Partly Cloudy';
+    if (code === 3)  return 'Overcast';
+    if (code <= 49)  return 'Foggy';
+    if (code <= 65)  return 'Rain';
+    if (code <= 77)  return 'Snow/Sleet';
+    if (code <= 82)  return 'Rain Showers';
+    if (code <= 99)  return 'Thunderstorm';
+    return 'Partly Cloudy';
+}
+
+// ── Load weather once ─────────────────────────────────────────────────
+async function initWeather() {
+    try {
+        let lat = 18.5204, lon = 73.8567;
+        if (navigator.geolocation) {
+            await new Promise(res => {
+                navigator.geolocation.getCurrentPosition(
+                    p => { lat = p.coords.latitude; lon = p.coords.longitude; res(); },
+                    () => res(), { timeout: 4000 }
+                );
+            });
+        }
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=auto`;
+        const r   = await fetch(url);
+        if (!r.ok) return;
+        const d = await r.json();
+        weatherData = d.current;
+        // Show weather widget and update it
+        showWeatherMini();
+        // Re-render risk for last hovered crop if any
+        if (lastCropKey) updateWeatherRisk(lastCropKey);
+    } catch {}
+}
+
+function showWeatherMini() {
+    if (!weatherData) return;
+    const c = weatherData;
+    document.getElementById('wmIcon').textContent    = wmoIcon(c.weather_code);
+    document.getElementById('wmTemp').textContent    = Math.round(c.temperature_2m) + '°C';
+    document.getElementById('wmDesc').textContent    = wmoDesc(c.weather_code);
+    document.getElementById('wmHumidity').textContent = c.relative_humidity_2m + '%';
+    document.getElementById('weatherMini').style.display = 'block';
+}
+
+function getWeatherRiskType(c) {
+    if (c.weather_code >= 51) return 'rain';
+    if (c.relative_humidity_2m > 70) return 'humid';
+    if (Math.round(c.temperature_2m) > 35) return 'hot';
+    if (Math.round(c.temperature_2m) < 15) return 'cold';
+    return 'ok';
+}
+
+function updateWeatherRisk(cropKey) {
+    const riskEl = document.getElementById('wmRisk');
+    if (!weatherData || !riskEl) return;
+    const meta = CROP_META_SELECT[cropKey];
+    if (!meta) return;
+    const type = getWeatherRiskType(weatherData);
+    // Build risk message from full CROP_META if available, otherwise generic
+    const RISK_MSGS = {
+        humid: `⚠️ Current humidity is ${weatherData.relative_humidity_2m}% — elevated fungal disease risk for this crop.`,
+        hot:   `🌡️ Temperature is ${Math.round(weatherData.temperature_2m)}°C — monitor for heat stress and pest outbreaks.`,
+        cold:  `❄️ Temperature is ${Math.round(weatherData.temperature_2m)}°C — watch for rust and mildew diseases.`,
+        rain:  `🌧️ Rain/storm conditions — bacterial and fungal diseases spread quickly. Delay spraying.`,
+        ok:    `✅ Current weather is favorable for this crop. Routine monitoring advised.`
+    };
+    const colors = { humid:'#f59e0b', hot:'#ef4444', cold:'#3b82f6', rain:'#10b981', ok:'#22c55e' };
+    riskEl.textContent = RISK_MSGS[type];
+    riskEl.style.borderLeft = `3px solid ${colors[type]}`;
+    riskEl.style.display = 'block';
+}
+
+// ── Show crop info on hover ───────────────────────────────────────────
+function showCropInfo(key, icon, name) {
+    lastCropKey = key;
+    const meta = CROP_META_SELECT[key];
+    if (!meta) return;
+
+    document.getElementById('cropInfoDefault').style.display = 'none';
+    document.getElementById('cropInfoCard').style.display   = 'block';
+
+    document.getElementById('ci2-icon').textContent   = icon;
+    document.getElementById('ci2-name').textContent   = name;
+    document.getElementById('ci2-temp').textContent   = meta.temp;
+    document.getElementById('ci2-soil').textContent   = meta.soil;
+    document.getElementById('ci2-water').textContent  = meta.water;
+    document.getElementById('ci2-season').textContent = meta.season;
+
+    const disEl = document.getElementById('ci2-diseases');
+    disEl.innerHTML = meta.commonDiseases.map(d =>
+        `<span style="background:#fef2f2;color:#b91c1c;border-radius:4px;padding:.15rem .5rem;font-size:.75rem;font-weight:500">${d}</span>`
+    ).join('');
+
+    document.getElementById('ci2-cta').innerHTML =
+        `<a href="/predict/${key}" class="btn btn-primary" style="width:100%;justify-content:center">
+            <i class="fas fa-camera"></i> Detect ${name} Disease →
+        </a>`;
+
+    // Highlight the hovered card
+    document.querySelectorAll('.module-card').forEach(c => c.style.outline = 'none');
+    const card = document.querySelector(`.module-card[data-crop="${key}"]`);
+    if (card) card.style.outline = '2px solid var(--green-500)';
+
+    // Update weather risk for this crop
+    updateWeatherRisk(key);
+}
+
+// Kick off weather fetch
+initWeather();
+</script>
+
+{% endblock %}

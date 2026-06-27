@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}{{ t('profile_title') }} - KisanMitra{% endblock %}
+{% block extra_css %}
+<style>
+.profile-page { max-width:960px; margin:2rem auto; padding:0 1.25rem 4rem; }
+.profile-header { background:linear-gradient(135deg,var(--green-700),var(--green-900)); border-radius:20px; padding:2rem; color:white; display:flex; align-items:center; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.profile-avatar-lg { width:86px; height:86px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:2.2rem; font-weight:700; border:3px solid rgba(255,255,255,.4); flex-shrink:0; overflow:hidden; position:relative; cursor:pointer; }
+.profile-avatar-lg img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.avatar-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition:.2s; font-size:.65rem; color:white; gap:2px; }
+.profile-avatar-lg:hover .avatar-overlay { opacity:1; }
+.avatar-overlay i { font-size:1.1rem; }
+.profile-info h2 { margin:0 0 .25rem; font-size:1.5rem; }
+.profile-info p { margin:0; opacity:.8; font-size:.9rem; }
+.profile-plan-badge { border-radius:20px; padding:.3rem .9rem; font-size:.8rem; font-weight:600; display:inline-block; margin-top:.5rem; }
+.badge-free { background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); }
+.badge-basic { background:rgba(34,197,94,.3); border:1px solid rgba(34,197,94,.5); }
+.badge-pro { background:rgba(251,191,36,.3); border:1px solid rgba(251,191,36,.5); }
+.badge-enterprise { background:rgba(139,92,246,.3); border:1px solid rgba(139,92,246,.5); }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.stat-card { background:white; border-radius:16px; padding:1.25rem; border:1px solid var(--gray-200); text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.stat-card .stat-val { font-size:2rem; font-weight:800; color:var(--green-700); }
+.stat-card .stat-lbl { font-size:.8rem; color:var(--gray-500); margin-top:.25rem; }
+.section-card { background:white; border-radius:16px; padding:1.5rem; border:1px solid var(--gray-200); margin-bottom:1.25rem; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.section-card h3 { margin:0 0 1rem; font-size:1rem; color:var(--gray-700); font-weight:700; }
+.credit-bar-lg { height:14px; border-radius:7px; background:var(--gray-100); overflow:hidden; margin:.5rem 0; }
+.credit-bar-fill-lg { height:100%; border-radius:7px; background:linear-gradient(90deg,#22c55e,#16a34a); transition:width 1s; }
+.credit-bar-fill-lg.low { background:linear-gradient(90deg,#f97316,#ef4444); }
+.credit-nums { display:flex; justify-content:space-between; font-size:.82rem; color:var(--gray-500); }
+.upgrade-cta { background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px dashed #f59e0b; border-radius:14px; padding:1.25rem; text-align:center; margin-top:1rem; }
+.upgrade-cta h4 { color:#92400e; margin:0 0 .4rem; }
+.upgrade-cta p { color:#78350f; font-size:.88rem; margin:0 0 .75rem; }
+.scan-item { display:flex; align-items:center; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--gray-100); }
+.scan-item:last-child { border-bottom:none; }
+.scan-module { background:var(--green-100); color:var(--green-700); border-radius:8px; padding:.25rem .6rem; font-size:.78rem; font-weight:600; white-space:nowrap; }
+.scan-disease { font-size:.9rem; font-weight:600; color:var(--gray-800); flex:1; }
+.scan-conf { font-size:.78rem; color:var(--gray-400); white-space:nowrap; }
+.scan-date { font-size:.75rem; color:var(--gray-400); white-space:nowrap; }
+.sev-badge { font-size:.72rem; padding:.15rem .5rem; border-radius:4px; font-weight:600; }
+.sev-Critical { background:#fee2e2; color:#991b1b; }
+.sev-High { background:#ffedd5; color:#9a3412; }
+.sev-Medium { background:#fef9c3; color:#713f12; }
+.sev-None, .sev-Low { background:#dcfce7; color:#14532d; }
+.quick-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.75rem; margin-bottom:1.25rem; }
+.quick-btn { display:flex; flex-direction:column; align-items:center; gap:.4rem; padding:1rem; background:white; border:1.5px solid var(--gray-200); border-radius:14px; text-decoration:none; color:var(--gray-700); font-size:.82rem; font-weight:600; transition:.2s; text-align:center; }
+.quick-btn:hover { border-color:var(--green-400); background:var(--green-50); color:var(--green-700); transform:translateY(-2px); }
+.quick-btn .q-icon { font-size:1.5rem; }
+.admin-banner { background:linear-gradient(135deg,#7c3aed,#5b21b6); border-radius:14px; padding:1rem 1.25rem; color:white; display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+.admin-banner h4 { margin:0 0 .2rem; font-size:1rem; }
+.admin-banner p { margin:0; font-size:.82rem; opacity:.85; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="profile-page">
+
+    {% if is_admin_user(user) %}
+    <!-- Admin Banner -->
+    <div class="admin-banner">
+        <div style="font-size:2rem">🛡️</div>
+        <div style="flex:1">
+            <h4>{{ t('admin_panel') }}</h4>
+            <p>You have administrator access to KisanMitra.</p>
+        </div>
+        <a href="/admin" class="btn btn-outline" style="border-color:rgba(255,255,255,.5);color:white;background:rgba(255,255,255,.15);white-space:nowrap">
+            <i class="fas fa-cog"></i> Go to Admin Panel
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <form id="photoForm" action="/upload-profile-photo" method="POST" enctype="multipart/form-data" style="display:none">
+            <input type="file" id="photoInput" name="photo" accept="image/*" onchange="document.getElementById('photoForm').submit()">
+        </form>
+        <div class="profile-avatar-lg" onclick="document.getElementById('photoInput').click()" title="Click to change photo">
+            {% if user.profile_photo %}
+                <img src="{{ url_for('static', filename='uploads/' + user.profile_photo) }}" alt="Profile Photo">
+            {% else %}
+                {{ user.name[0].upper() }}
+            {% endif %}
+            <div class="avatar-overlay"><i class="fas fa-camera"></i>Change</div>
+        </div>
+        <div class="profile-info">
+            <h2>{{ user.name }}</h2>
+            <p>{{ user.email }}</p>
+            <span class="profile-plan-badge
+                {% if user.plan == 'free' %}badge-free
+                {% elif user.plan == 'basic' %}badge-basic
+                {% elif user.plan == 'pro' %}badge-pro
+                {% else %}badge-enterprise{% endif %}">
+                {% if user.plan == 'free' %}🌱 {{ t('plan_free') }}
+                {% elif user.plan == 'basic' %}⭐ {{ t('plan_basic') }}
+                {% elif user.plan == 'pro' %}🚀 {{ t('plan_pro') }}
+                {% else %}🏢 {{ t('plan_enterprise') }}{% endif %}
+            </span>
+            <div style="margin-top:.4rem;font-size:.78rem;opacity:.6">
+                <i class="fas fa-calendar-alt"></i>
+                {{ t('member_since') }}: {{ user.created_at[:10] if user.created_at else '—' }}
+            </div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:.5rem">
+            <a href="/plans" class="btn btn-outline" style="border-color:rgba(255,255,255,.5);color:white;background:rgba(255,255,255,.1)">
+                <i class="fas fa-crown"></i> {{ t('upgrade_now') }}
+            </a>
+            <a href="/logout" style="text-align:center;color:rgba(255,255,255,.65);font-size:.8rem;text-decoration:none;padding:.3rem">
+                <i class="fas fa-sign-out-alt"></i> {{ t('nav_logout') }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-val">{{ user.credits }}</div>
+            <div class="stat-lbl">⚡ {{ t('credits_remaining') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">{{ credits_used }}</div>
+            <div class="stat-lbl">📊 {{ t('credits_used') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">{{ total_scans }}</div>
+            <div class="stat-lbl">🔬 {{ t('total_scans') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">{{ (user.credits // 5) }}</div>
+            <div class="stat-lbl">🎯 {{ t('scan_history') }} {{ t('credits_remaining') | lower }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="/predict" class="quick-btn">
+            <span class="q-icon">🔬</span> {{ t('nav_predict') }}
+        </a>
+        <a href="/disease-library" class="quick-btn">
+            <span class="q-icon">📚</span> {{ t('nav_library') }}
+        </a>
+        <a href="/weather" class="quick-btn">
+            <span class="q-icon">🌦️</span> {{ t('nav_weather') }}
+        </a>
+        <a href="/plans" class="quick-btn">
+            <span class="q-icon">👑</span> {{ t('choose_plan') }}
+        </a>
+        {% if is_admin_user(user) %}
+        <a href="/admin" class="quick-btn" style="border-color:#7c3aed;color:#7c3aed">
+            <span class="q-icon">🛡️</span> {{ t('admin_panel') }}
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Credits Section -->
+    <div class="section-card">
+        <h3>⚡ {{ t('credits_remaining') }}</h3>
+        {% set max_credits = [free_credits, user.credits]|max %}
+        {% set pct = [((user.credits / max_credits) * 100)|int, 100]|min %}
+        <div class="credit-bar-lg">
+            <div class="credit-bar-fill-lg {% if user.credits < 25 %}low{% endif %}" style="width:{{ pct }}%"></div>
+        </div>
+        <div class="credit-nums">
+            <span>{{ user.credits }} / {{ free_credits }} {{ t('credits_label') }}</span>
+            <span>{{ t('each_prediction') }}</span>
+        </div>
+        {% if user.credits < 50 %}
+        <div class="upgrade-cta">
+            <h4>{% if user.credits == 0 %}⚠️ {{ t('no_credits_title') }}{% else %}⚠️ Running low on credits!{% endif %}</h4>
+            <p>{% if user.credits == 0 %}{{ t('no_credits_msg') }}{% else %}Only {{ user.credits }} credits remaining. Upgrade to continue.{% endif %}</p>
+            <a href="/plans" class="btn btn-primary"><i class="fas fa-crown"></i> {{ t('upgrade_now') }}</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Scans -->
+    <div class="section-card">
+        <h3>🔬 {{ t('scan_history') }}</h3>
+        {% if recent %}
+            {% for scan in recent %}
+            <div class="scan-item">
+                <span class="scan-module">{{ scan.module }}</span>
+                <span class="scan-disease">{{ scan.disease }}</span>
+                {% if scan.disease != 'Healthy' %}
+                <span class="sev-badge sev-{{ DISEASE_DATA[scan.module]['treatments'].get(scan.disease, {}).get('severity', 'Medium') if scan.module in DISEASE_DATA else 'Medium' }}">
+                    {{ DISEASE_DATA[scan.module]['treatments'].get(scan.disease, {}).get('severity', '?') if scan.module in DISEASE_DATA else '' }}
+                </span>
+                {% endif %}
+                <span class="scan-conf">{{ '%.0f'|format(scan.confidence * 100) }}%</span>
+                <span class="scan-date">{{ scan.created_at[:10] if scan.created_at else '' }}</span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align:center;padding:2rem 0;color:var(--gray-400)">
+                <div style="font-size:2.5rem;margin-bottom:.75rem">🔬</div>
+                <p>{{ t('no_scans') }}</p>
+                <a href="/predict" class="btn btn-primary" style="margin-top:.75rem">
+                    <i class="fas fa-microscope"></i> {{ t('nav_predict') }}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

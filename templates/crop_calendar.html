@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ t('cal_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <span class="section-label" style="color:var(--green-300)">{{ t('cal_label') }}</span>
+    <h1>{{ t('cal_title') }}</h1>
+    <p>{{ t('cal_sub') }}</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div style="background:var(--white);border-radius:var(--radius-xl);padding:2rem;box-shadow:var(--shadow-md);overflow-x:auto">
+            <h3 style="font-family:var(--font-display);font-size:1.6rem;margin-bottom:.5rem">{{ t('cal_heading') }}</h3>
+            <p style="color:var(--gray-500);margin-bottom:1.5rem">{{ t('cal_legend') }}</p>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+                <span><span class="crop-season season-sow">S</span> {{ t('cal_sow') }}</span>
+                <span><span class="crop-season season-grow">G</span> {{ t('cal_grow') }}</span>
+                <span><span class="crop-season season-harvest">H</span> {{ t('cal_harvest') }}</span>
+                <span><span class="crop-season season-off">—</span> {{ t('cal_off') }}</span>
+            </div>
+            <table class="calendar-table" style="min-width:900px">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;padding-left:1rem">{{ t('crop_col') }}</th>
+                        <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
+                        <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
+                        <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set crops = [
+                      ('🍅 Tomato',   ['G','G','H','H','S','S','G','G','G','H','H','G']),
+                      ('🥔 Potato',   ['H','H','—','—','—','S','S','G','G','G','H','H']),
+                      ('🌽 Corn',     ['—','S','S','G','G','H','S','S','G','G','H','—']),
+                      ('🍇 Grape',    ['H','H','—','—','—','—','—','S','G','G','G','H']),
+                      ('🍎 Apple',    ['—','—','S','G','G','G','G','G','H','H','—','—']),
+                      ('🌾 Rice',     ['—','—','—','—','—','S','S','G','G','H','H','—']),
+                      ('🌾 Wheat',    ['—','—','—','—','—','—','—','—','—','S','S','G']),
+                      ('🥭 Mango',    ['G','H','H','H','H','G','G','G','G','G','G','G']),
+                      ('🧅 Onion',    ['S','G','G','H','—','S','S','G','G','G','H','H']),
+                      ('🫑 Pepper',   ['—','S','S','G','G','G','H','H','S','G','G','—']),
+                    ] %}
+                    {% for crop, months in crops %}
+                    <tr>
+                        <td style="text-align:left;padding-left:1rem;font-weight:600;white-space:nowrap">{{ crop }}</td>
+                        {% for m in months %}
+                        <td>
+                            {% if m == 'S' %}<span class="crop-season season-sow">S</span>
+                            {% elif m == 'G' %}<span class="crop-season season-grow">G</span>
+                            {% elif m == 'H' %}<span class="crop-season season-harvest">H</span>
+                            {% else %}<span class="crop-season season-off">—</span>{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Disease Risk by Season -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:3rem">
+            <div style="background:var(--white);border-radius:var(--radius-lg);padding:2rem;box-shadow:var(--shadow-md);border-top:4px solid var(--green-400)">
+                <h4 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem">{{ t('kharif_title') }}</h4>
+                <p style="color:var(--gray-500);font-size:.9rem;margin-bottom:1rem">{{ t('kharif_desc') }}</p>
+                <ul style="list-style:none;font-size:.85rem;color:var(--gray-600);line-height:2">
+                    <li>{{ t('kharif_r1') }}</li>
+                    <li>{{ t('kharif_r2') }}</li>
+                    <li>{{ t('kharif_r3') }}</li>
+                </ul>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius-lg);padding:2rem;box-shadow:var(--shadow-md);border-top:4px solid var(--amber-400,#f59e0b)">
+                <h4 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem">{{ t('rabi_title') }}</h4>
+                <p style="color:var(--gray-500);font-size:.9rem;margin-bottom:1rem">{{ t('rabi_desc') }}</p>
+                <ul style="list-style:none;font-size:.85rem;color:var(--gray-600);line-height:2">
+                    <li>{{ t('rabi_r1') }}</li>
+                    <li>{{ t('rabi_r2') }}</li>
+                    <li>{{ t('rabi_r3') }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

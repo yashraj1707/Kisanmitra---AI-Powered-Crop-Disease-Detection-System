@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ t('result_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="container" style="max-width:700px;margin:3rem auto">
+    <div style="background:var(--white);border-radius:var(--radius-xl);padding:2.5rem;box-shadow:var(--shadow-lg)">
+
+        <h2 style="font-family:var(--font-display);font-size:2rem;margin-bottom:1.5rem;color:var(--gray-900)">
+            {{ t('result_title') }}
+        </h2>
+
+        {% if warning %}
+        <div style="background:#fff7ed;border:1px solid #f97316;border-radius:var(--radius-md);padding:1rem 1.25rem;margin-bottom:1.5rem;color:#9a3412">
+            ⚠ {{ warning }}
+        </div>
+        {% endif %}
+
+        <div style="display:grid;gap:1rem;margin-bottom:2rem">
+            <div style="background:var(--green-50);border-radius:var(--radius-md);padding:1.25rem;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-weight:600;color:var(--gray-700)">{{ t('result_crop') }}</span>
+                <span style="color:var(--green-700);font-weight:700">{{ crop }}</span>
+            </div>
+            <div style="background:var(--green-50);border-radius:var(--radius-md);padding:1.25rem;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-weight:600;color:var(--gray-700)">{{ t('result_disease') }}</span>
+                <span style="color:var(--green-700);font-weight:700">{{ disease }}</span>
+            </div>
+            <div style="background:var(--green-50);border-radius:var(--radius-md);padding:1.25rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+                    <span style="font-weight:600;color:var(--gray-700)">{{ t('result_confidence') }}</span>
+                    <span style="font-weight:700;color:
+                        {% if confidence > 80 %}var(--green-600)
+                        {% elif confidence > 60 %}#d97706
+                        {% else %}#dc2626{% endif %}">
+                        {{ confidence }}%
+                        — {% if confidence > 80 %}{{ t('high_conf') }}{% elif confidence > 60 %}{{ t('mod_conf') }}{% else %}{{ t('low_conf') }}{% endif %}
+                    </span>
+                </div>
+                <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden">
+                    <div id="confidenceBar" data-confidence="{{ confidence }}" style="height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--green-400),var(--green-600));transition:width .8s ease"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:1.5rem">
+            <a href="/predict" class="btn btn-primary"><i class="fas fa-redo"></i> {{ t('try_another') }}</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="{{ get_lang() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KisanMitra - Smart Crop Disease Detection{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ── Language Switcher ── */
+        .lang-switcher { display:flex; gap:4px; align-items:center; }
+        .lang-btn { padding:3px 9px; border-radius:20px; font-size:.75rem; font-weight:600; border:1.5px solid var(--green-300); background:transparent; color:var(--green-700); cursor:pointer; text-decoration:none; transition:.2s; }
+        .lang-btn.active, .lang-btn:hover { background:var(--green-600); color:white; border-color:var(--green-600); }
+
+        /* ── Credits Badge ── */
+        .credits-badge { display:flex; align-items:center; gap:5px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:20px; padding:4px 12px; font-size:.8rem; font-weight:700; color:#92400e; cursor:pointer; text-decoration:none; }
+        .credits-badge .credit-icon { font-size:.9rem; }
+        .credits-badge.low { background:linear-gradient(135deg,#fee2e2,#fecaca); border-color:#ef4444; color:#991b1b; }
+
+        /* ── Auth Buttons ── */
+        .nav-auth { display:flex; align-items:center; gap:8px; }
+        .btn-login { padding:6px 16px; border-radius:20px; border:1.5px solid var(--green-500); color:var(--green-700); font-size:.85rem; font-weight:600; text-decoration:none; transition:.2s; }
+        .btn-login:hover { background:var(--green-50); }
+        .btn-signup-nav { padding:6px 16px; border-radius:20px; background:var(--green-600); color:white; font-size:.85rem; font-weight:600; text-decoration:none; transition:.2s; }
+        .btn-signup-nav:hover { background:var(--green-700); }
+
+        /* ── User Dropdown ── */
+        .user-menu { position:relative; }
+        .user-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--green-500),var(--green-700)); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; cursor:pointer; border:2px solid var(--green-300); user-select:none; }
+        .user-dropdown { display:none; position:fixed; background:white; border:1px solid var(--gray-200); border-radius:12px; padding:.5rem; min-width:180px; box-shadow:0 8px 24px rgba(0,0,0,.18); z-index:99999; }
+        .user-dropdown a { display:flex; align-items:center; gap:.5rem; padding:.6rem .75rem; border-radius:8px; font-size:.88rem; color:var(--gray-700); text-decoration:none; cursor:pointer; }
+        .user-dropdown a:hover { background:var(--gray-50); color:var(--green-700); }
+        .user-dropdown hr { border:none; border-top:1px solid var(--gray-100); margin:.3rem 0; }
+        .user-dropdown.open { display:block; }
+
+        /* ── Credit Out of Credits ── */
+        .credit-bar { height:6px; border-radius:3px; background:var(--gray-200); margin-top:3px; overflow:hidden; }
+        .credit-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#22c55e,#16a34a); transition:width .5s; }
+        .credit-bar-fill.low { background:linear-gradient(90deg,#ef4444,#dc2626); }
+
+        /* ── No Credits Modal ── */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9000; align-items:center; justify-content:center; }
+        .modal-overlay.show { display:flex; }
+        .modal-box { background:white; border-radius:20px; padding:2rem; max-width:420px; width:90%; text-align:center; animation:modalPop .3s ease; }
+        @keyframes modalPop { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-box h3 { font-size:1.4rem; color:#dc2626; margin-bottom:.5rem; }
+        .modal-box p { color:var(--gray-600); margin-bottom:1.5rem; font-size:.95rem; }
+        .modal-actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+
+        /* ── Nav extras responsive ── */
+        .nav-right-group { display:flex; align-items:center; gap:10px; }
+        @media (max-width:768px) {
+            .nav-right-group { gap:5px; }
+            .lang-btn { padding:2px 7px; font-size:.7rem; }
+            .credits-badge { padding:3px 8px; font-size:.72rem; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="mainNav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <div class="brand-icon">🌱</div>
+                <div class="brand-text">
+                    <span class="brand-name">KisanMitra</span>
+                    <span class="brand-tagline">किसान मित्र</span>
+                </div>
+            </a>
+            <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}"><i class="fas fa-home"></i> {{ t('nav_home') }}</a></li>
+                <li class="has-dropdown">
+                    <a href="/predict" class="nav-link {% if 'predict' in request.endpoint %}active{% endif %}"><i class="fas fa-microscope"></i> {{ t('nav_predict') }} <i class="fas fa-chevron-down fa-xs"></i></a>
+                    <div class="dropdown">
+                        <a href="/predict/tomato"><span>🍅</span> Tomato</a>
+                        <a href="/predict/potato"><span>🥔</span> Potato</a>
+                        <a href="/predict/corn"><span>🌽</span> Corn / Maize</a>
+                        <a href="/predict/grape"><span>🍇</span> Grape</a>
+                        <a href="/predict/apple"><span>🍎</span> Apple</a>
+                        <a href="/predict/rice"><span>🌾</span> Rice</a>
+                        <a href="/predict/wheat"><span>🌾</span> Wheat</a>
+                        <a href="/predict/mango"><span>🥭</span> Mango</a>
+                    </div>
+                </li>
+                <li><a href="/disease-library" class="nav-link {% if request.endpoint == 'disease_library' %}active{% endif %}"><i class="fas fa-book-open"></i> {{ t('nav_library') }}</a></li>
+                <li><a href="/weather" class="nav-link {% if request.endpoint == 'weather' %}active{% endif %}"><i class="fas fa-cloud-sun"></i> {{ t('nav_weather') }}</a></li>
+                <li><a href="/crop-calendar" class="nav-link {% if request.endpoint == 'crop_calendar' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> {{ t('nav_calendar') }}</a></li>
+                <li><a href="/about" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}"><i class="fas fa-info-circle"></i> {{ t('nav_about') }}</a></li>
+                <li><a href="/contact" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}"><i class="fas fa-envelope"></i> {{ t('nav_contact') }}</a></li>
+                <li><a href="/feedback" class="nav-link {% if request.endpoint == 'feedback' %}active{% endif %}"><i class="fas fa-star"></i> {{ t('nav_feedback') }}</a></li>
+            </ul>
+
+            <!-- Right-side: lang + auth + credits -->
+            <div class="nav-right-group">
+                <!-- Language Switcher -->
+                <div class="lang-switcher">
+                    <a href="/set-lang/en" class="lang-btn {% if get_lang()=='en' %}active{% endif %}">EN</a>
+                    <a href="/set-lang/hi" class="lang-btn {% if get_lang()=='hi' %}active{% endif %}">हि</a>
+                    <a href="/set-lang/mr" class="lang-btn {% if get_lang()=='mr' %}active{% endif %}">म</a>
+                </div>
+
+                {% if user %}
+                    <!-- Credits Badge -->
+                    {% set pct = (user.credits / 200 * 100)|int %}
+                    <a href="/profile" class="credits-badge {% if user.credits < 25 %}low{% endif %}" title="{{ t('credits_remaining') }}">
+                        <span class="credit-icon">⚡</span>
+                        {{ user.credits }} {{ t('credits_label') }}
+                    </a>
+                    <!-- User Menu -->
+                    <div class="user-menu">
+                        <div class="user-avatar" style="{% if user.profile_photo %}padding:0;overflow:hidden;{% endif %}">
+                            {% if user.profile_photo %}
+                                <img src="{{ url_for('static', filename='uploads/' + user.profile_photo) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            {% else %}
+                                {{ user.name[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="/profile"><i class="fas fa-user"></i> {{ t('nav_profile') }}</a>
+                            <a href="/plans"><i class="fas fa-crown"></i> {{ t('upgrade_now') }}</a>
+                            <hr>
+                            <a href="/logout" style="color:#dc2626"><i class="fas fa-sign-out-alt"></i> {{ t('nav_logout') }}</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="nav-auth">
+                        <a href="/login" class="btn-login">{{ t('nav_login') }}</a>
+                        <a href="/signup" class="btn-signup-nav">{{ t('nav_signup') }}</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+            <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">🌱 KisanMitra</div>
+                    <p>AI-powered plant disease detection for Indian farmers. Protecting crops, securing livelihoods.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>{{ t('nav_predict') }}</h4>
+                    <ul>
+                        <li><a href="/predict/tomato">🍅 Tomato</a></li>
+                        <li><a href="/predict/potato">🥔 Potato</a></li>
+                        <li><a href="/predict/corn">🌽 Corn / Maize</a></li>
+                        <li><a href="/predict/rice">🌾 Rice</a></li>
+                        <li><a href="/predict/wheat">🌾 Wheat</a></li>
+                        <li><a href="/predict/mango">🥭 Mango</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="/disease-library"><i class="fas fa-book"></i> {{ t('nav_library') }}</a></li>
+                        <li><a href="/weather"><i class="fas fa-cloud"></i> {{ t('nav_weather') }}</a></li>
+                        <li><a href="/crop-calendar"><i class="fas fa-calendar"></i> {{ t('nav_calendar') }}</a></li>
+                        <li><a href="/about"><i class="fas fa-info"></i> {{ t('nav_about') }}</a></li>
+                        <li><a href="/plans"><i class="fas fa-crown"></i> Plans & Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>{{ t('nav_contact') }}</h4>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> kisanmitra@agri.in</li>
+                        <li><i class="fas fa-phone"></i> +91 9623350670</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Pune, Maharashtra</li>
+                    </ul>
+                    <div class="footer-badge"><span>🏆 Final Year Project 2026</span></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 KisanMitra. Built with ❤️ for Indian Farmers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+
+    <script>
+    // ── User Dropdown: click-toggle with fixed positioning ──
+    (function() {
+        var avatar = document.querySelector('.user-avatar');
+        var dropdown = document.querySelector('.user-dropdown');
+        if (!avatar || !dropdown) return;
+
+        function positionDropdown() {
+            var rect = avatar.getBoundingClientRect();
+            dropdown.style.top  = (rect.bottom + 8) + 'px';
+            dropdown.style.left = 'auto';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        }
+
+        avatar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = dropdown.classList.contains('open');
+            if (!isOpen) {
+                positionDropdown();
+                dropdown.classList.add('open');
+            } else {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target) && e.target !== avatar) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', function() {
+            if (dropdown.classList.contains('open')) positionDropdown();
+        }, true);
+        window.addEventListener('resize', function() {
+            if (dropdown.classList.contains('open')) positionDropdown();
+        });
+    })();
+    </script>
+</body>
+</html>

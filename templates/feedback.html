@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ t('feedback_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ t('feedback_title') }}</h1>
+    <p>{{ t('feedback_sub') }}</p>
+</div>
+
+<div class="form-grid">
+    <!-- Submit Feedback -->
+    <div class="form-card">
+        <h2>{{ t('share_feedback_title') }}</h2>
+        <p>{{ t('feedback_form_sub') }}</p>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{{ t('full_name') }}</label>
+                    <input type="text" name="name" class="form-control" placeholder="{{ t('signup_name') }}" required>
+                </div>
+                <div class="form-group">
+                    <label>{{ t('email_label') }}</label>
+                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ t('your_rating') }}</label>
+                <div class="rating-stars">
+                    {% for i in range(1, 6) %}
+                    <button type="button" class="star-btn" data-val="{{ i }}">★</button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="ratingInput" value="5">
+            </div>
+            <div class="form-group">
+                <label>{{ t('your_message') }}</label>
+                <textarea name="message" class="form-control" rows="5" placeholder="{{ t('msg_placeholder_fb') }}" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-paper-plane"></i> {{ t('submit_feedback') }}
+            </button>
+        </form>
+    </div>
+
+    <!-- Info -->
+    <div>
+        <div style="background:linear-gradient(135deg,var(--green-800),var(--green-600));border-radius:var(--radius-xl);padding:2.5rem;color:var(--white);margin-bottom:1.5rem">
+            <h3 style="font-family:var(--font-display);font-size:1.6rem;margin-bottom:1rem">{{ t('why_feedback') }}</h3>
+            <ul style="list-style:none;line-height:2.2;color:rgba(255,255,255,.85);font-size:.95rem">
+                <li>{{ t('fb_reason1') }}</li>
+                <li>{{ t('fb_reason2') }}</li>
+                <li>{{ t('fb_reason3') }}</li>
+                <li>{{ t('fb_reason4') }}</li>
+            </ul>
+        </div>
+        <div class="form-card">
+            <h3 style="font-family:var(--font-display);margin-bottom:1rem">{{ t('platform_stats') }}</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div style="background:var(--green-50);border-radius:var(--radius-md);padding:1.25rem;text-align:center">
+                    <span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--green-600);display:block" data-target="95">0</span>
+                    <span style="font-size:.8rem;color:var(--gray-500)">{{ t('satisfaction') }}</span>
+                </div>
+                <div style="background:var(--green-50);border-radius:var(--radius-md);padding:1.25rem;text-align:center">
+                    <span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--green-600);display:block" data-target="{{ feedbacks|length or 89 }}">0</span>
+                    <span style="font-size:.8rem;color:var(--gray-500)">{{ t('feedbacks_count') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Gallery -->
+{% if feedbacks %}
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">{{ t('community_label') }}</span>
+            <h2 class="section-title">{{ t('what_farmers_say') }}</h2>
+        </div>
+        <div class="feedback-grid">
+            {% for fb in feedbacks %}
+            <div class="feedback-card">
+                <div class="feedback-stars">{% for i in range(fb.rating) %}★{% endfor %}</div>
+                <p class="feedback-msg">"{{ fb.message }}"</p>
+                <div class="feedback-author">— {{ fb.name }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

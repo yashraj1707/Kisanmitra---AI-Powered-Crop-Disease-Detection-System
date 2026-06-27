@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ t('choose_plan') }} - KisanMitra{% endblock %}
+{% block extra_css %}
+<style>
+.plans-page { max-width:1100px; margin:0 auto; padding:3rem 1.25rem 5rem; }
+.plans-header { text-align:center; margin-bottom:3rem; }
+.plans-header h1 { font-size:2.4rem; color:var(--green-800); margin-bottom:.75rem; font-family:var(--font-display); }
+.plans-header p { color:var(--gray-500); font-size:1.05rem; max-width:560px; margin:0 auto; }
+.plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem; margin-bottom:2rem; }
+.plan-card { background:white; border-radius:20px; border:2px solid var(--gray-200); padding:2rem; position:relative; transition:.3s; }
+.plan-card:hover { transform:translateY(-6px); box-shadow:0 20px 60px rgba(0,0,0,.1); }
+.plan-card.popular { border-color:var(--green-500); box-shadow:0 8px 32px rgba(34,197,94,.2); }
+.popular-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--green-600); color:white; font-size:.75rem; font-weight:700; padding:.3rem .9rem; border-radius:20px; white-space:nowrap; }
+.plan-name { font-size:1.2rem; font-weight:800; color:var(--gray-800); margin-bottom:.25rem; }
+.plan-price { font-size:2.6rem; font-weight:900; color:var(--green-700); line-height:1; margin:.5rem 0; }
+.plan-price span { font-size:1rem; font-weight:400; color:var(--gray-400); }
+.plan-credits { background:var(--green-50); border-radius:10px; padding:.5rem .75rem; font-size:.88rem; font-weight:700; color:var(--green-700); display:inline-block; margin-bottom:1rem; }
+.plan-features { list-style:none; padding:0; margin:0 0 1.5rem; display:flex; flex-direction:column; gap:.5rem; }
+.plan-features li { font-size:.9rem; color:var(--gray-600); display:flex; align-items:center; gap:.5rem; }
+.plan-features li::before { content:'✅'; font-size:.8rem; flex-shrink:0; }
+.plan-btn { display:block; text-align:center; padding:.85rem; border-radius:12px; font-weight:700; font-size:.95rem; text-decoration:none; transition:.2s; border:none; cursor:pointer; width:100%; }
+.plan-btn-primary { background:var(--green-600); color:white; }
+.plan-btn-primary:hover { background:var(--green-700); }
+.plan-btn-outline { border:2px solid var(--green-500); color:var(--green-700); background:transparent; }
+.plan-btn-outline:hover { background:var(--green-50); }
+.plan-btn-disabled { border:2px solid var(--gray-200); color:var(--gray-400); background:transparent; cursor:not-allowed; opacity:.7; }
+.free-card { background:linear-gradient(135deg,#f8fafc,#f1f5f9); border-color:var(--gray-300); }
+.free-card .plan-price { color:var(--gray-600); }
+.compare-note { text-align:center; color:var(--gray-500); font-size:.9rem; margin-top:1.5rem; line-height:1.8; }
+.compare-note strong { color:var(--green-600); }
+.features-compare { background:white; border-radius:20px; border:1px solid var(--gray-200); padding:2rem; margin-top:2.5rem; overflow-x:auto; }
+.features-compare h3 { font-size:1.3rem; color:var(--green-800); margin-bottom:1.5rem; text-align:center; }
+.comp-table { width:100%; border-collapse:collapse; }
+.comp-table th { background:var(--green-600); color:white; padding:.75rem 1rem; font-size:.88rem; }
+.comp-table th:first-child { text-align:left; border-radius:10px 0 0 0; }
+.comp-table th:last-child { border-radius:0 10px 0 0; }
+.comp-table td { padding:.75rem 1rem; text-align:center; border-bottom:1px solid var(--gray-100); font-size:.88rem; color:var(--gray-700); }
+.comp-table td:first-child { text-align:left; font-weight:600; }
+.comp-table tr:hover td { background:var(--green-50); }
+.tick { color:var(--green-600); font-weight:700; }
+.cross { color:var(--gray-300); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="plans-page">
+    <div class="plans-header">
+        <span class="section-label">{{ t('choose_plan') }}</span>
+        <h1>🌾 {{ t('choose_plan') }}</h1>
+        <p>{{ t('signup_free_credits') }} {{ t('upgrade_now') }} {{ t('per_month') }}.</p>
+    </div>
+
+    <div class="plans-grid">
+        <!-- Free Plan -->
+        <div class="plan-card free-card">
+            <div class="plan-name">🌱 {{ t('plan_free') }}</div>
+            <div class="plan-price">₹0 <span>{{ t('per_month') }}</span></div>
+            <div class="plan-credits">⚡ 200 {{ t('credits_label') }}</div>
+            <ul class="plan-features">
+                <li>200 {{ t('credits_label') }} (one-time)</li>
+                <li>{{ t('each_prediction') }}</li>
+                <li>{{ t('feat3_title') }}</li>
+                <li>{{ t('lib_label') }}</li>
+            </ul>
+            {% if user %}
+                {% if user.plan == 'free' %}
+                <button class="plan-btn plan-btn-disabled" disabled>✅ {{ t('current_plan') if t('current_plan') != 'current_plan' else 'Current Plan' }}</button>
+                {% else %}
+                <button class="plan-btn plan-btn-disabled" disabled>Downgrade</button>
+                {% endif %}
+            {% else %}
+            <a href="/signup" class="plan-btn plan-btn-outline">{{ t('signup_to_predict') }}</a>
+            {% endif %}
+        </div>
+
+        {% for plan in plans %}
+        <div class="plan-card {% if plan.popular %}popular{% endif %}">
+            {% if plan.popular %}<div class="popular-badge">⭐ Most Popular</div>{% endif %}
+            <div class="plan-name">
+                {% if plan.id == 'basic' %}⭐{% elif plan.id == 'pro' %}🚀{% else %}🏢{% endif %}
+                {{ t(plan.name_key) }}
+            </div>
+            <div class="plan-price">₹{{ plan.price }} <span>{{ t('per_month') }}</span></div>
+            <div class="plan-credits">⚡ {{ plan.credits }} {{ t('credits_label') }}/{{ t('per_month').strip('/') }}</div>
+            <ul class="plan-features">
+                {% set lang = get_lang() %}
+                {% for feat in plan.features.get(lang, plan.features['en']) %}
+                <li>{{ feat }}</li>
+                {% endfor %}
+            </ul>
+            {% if user %}
+                {% if user.plan == plan.id %}
+                <button class="plan-btn plan-btn-disabled" disabled>✅ Current Plan</button>
+                {% else %}
+                <a href="/buy-plan/{{ plan.id }}" class="plan-btn plan-btn-primary">
+                    <i class="fas fa-crown"></i> {{ t('upgrade_now') }}
+                </a>
+                {% endif %}
+            {% else %}
+            <a href="/signup" class="plan-btn plan-btn-primary">
+                {{ t('nav_signup') }} &amp; {{ t('upgrade_now') }}
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <p class="compare-note">
+        💡 All plans include: <strong>{{ t('feat1_title') }}</strong> · <strong>{{ t('feat2_title') }}</strong> · <strong>{{ t('feat6_title') }}</strong> · <strong>{{ t('feat4_title') }}</strong>
+    </p>
+
+    <!-- Feature Comparison Table -->
+    <div class="features-compare">
+        <h3>📊 Feature Comparison</h3>
+        <table class="comp-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>🌱 {{ t('plan_free') }}</th>
+                    <th>⭐ {{ t('plan_basic') }}</th>
+                    <th>🚀 {{ t('plan_pro') }}</th>
+                    <th>🏢 {{ t('plan_enterprise') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>{{ t('credits_label') }}</td><td>200</td><td>500/mo</td><td>1500/mo</td><td>5000/mo</td></tr>
+                <tr><td>{{ t('feat1_title') }}</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+                <tr><td>{{ t('feat6_title') }}</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+                <tr><td>{{ t('feat4_title') }}</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+                <tr><td>{{ t('feat5_title') }}</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+                <tr><td>Priority Support</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+                <tr><td>API Access</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✓</td></tr>
+                <tr><td>Multi-farm Management</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✓</td></tr>
+                <tr><td>Custom Reports</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✓</td></tr>
+                <tr><td>Price</td><td>₹0</td><td>₹99/mo</td><td>₹249/mo</td><td>₹699/mo</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

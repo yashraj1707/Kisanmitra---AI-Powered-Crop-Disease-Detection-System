@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+{% block title %}{{ module_data.name }} Disease Detection - KisanMitra{% endblock %}
+{% block content %}
+
+{# ── Crop metadata embedded as JSON for JS to read ── #}
+<script>
+const CROP_META = {
+  tomato:  { temp:"20–30°C", soil:"Well-drained loamy, pH 6–7", water:"Regular, avoid waterlogging", season:"Kharif & Rabi", commonDiseases:["Late Blight","Early Blight","Leaf Mold","Bacterial Spot"], humidRisk:"🍄 Fungal diseases (Late Blight, Leaf Mold) spread rapidly in humidity > 70%. Apply Mancozeb preventively.", hotRisk:"🌡️ Heat stress above 35°C causes flower drop. Spider Mites outbreak likely — check leaf undersides.", coldRisk:"❄️ Chilling injury below 10°C. Powdery Mildew risk rises in cool nights.", rainRisk:"⛈️ Bacterial Spot spreads with rain splash. Avoid overhead irrigation after storms.", dryRisk:"☀️ Low fungal risk. Good for growth — maintain consistent irrigation." },
+  potato:  { temp:"15–25°C", soil:"Sandy loam, pH 5.5–6.5", water:"Consistent moisture, avoid waterlogging", season:"Rabi (Oct–Mar)", commonDiseases:["Late Blight","Early Blight"], humidRisk:"🍄 CRITICAL: Late Blight (Phytophthora) explodes in humidity > 75%. Apply Metalaxyl + Mancozeb within 24 hrs.", hotRisk:"🌡️ Tuber development stops above 30°C. Reduce irrigation frequency.", coldRisk:"❄️ Frost risk for foliage below 0°C. Cover young plants.", rainRisk:"⛈️ Destroy any infected plants immediately — Late Blight spreads with rain.", dryRisk:"☀️ Low disease risk. Ideal conditions for tuber filling." },
+  corn:    { temp:"21–32°C", soil:"Deep loamy, pH 5.8–7", water:"Critical during silking & tasseling", season:"Kharif (Jun–Oct)", commonDiseases:["Cercospora Leaf Spot","Common Rust","Northern Leaf Blight"], humidRisk:"🍄 Cercospora Leaf Spot and Northern Leaf Blight spread in high humidity. Apply Trifloxystrobin at first sign.", hotRisk:"🌡️ Pollen viability drops above 35°C — risk of poor grain set. Ensure soil moisture.", coldRisk:"❄️ Growth slows below 15°C. Delay sowing if cold spells continue.", rainRisk:"⛈️ Common Rust spores spread with wind and rain. Inspect after rain events.", dryRisk:"☀️ Good conditions. Ensure irrigation during tassel and silk stages." },
+  grape:   { temp:"15–30°C", soil:"Well-drained sandy loam, pH 6–6.5", water:"Moderate, avoid wetting foliage", season:"Perennial, harvest Jan–Mar", commonDiseases:["Black Rot","Esca","Leaf Blight"], humidRisk:"🍄 Black Rot and Leaf Blight are severe in humidity > 70%. Spray Myclobutanil before rain.", hotRisk:"🌡️ Sunburn risk on berries above 38°C. Shade cloth recommended.", coldRisk:"❄️ Frost damages buds. Protect with anti-frost irrigation or covers.", rainRisk:"⛈️ Remove Esca-infected wood before rainy season. Protect pruning wounds.", dryRisk:"☀️ Powdery Mildew risk persists even in dry conditions. Monitor leaf surface." },
+  apple:   { temp:"12–25°C", soil:"Well-drained loamy, pH 6–7", water:"Regular, drip preferred", season:"Harvest Jul–Oct (hills)", commonDiseases:["Apple Scab","Black Rot","Cedar Apple Rust"], humidRisk:"🍄 Apple Scab spreads aggressively with wet leaves. Apply Captan every 7–10 days during wet spells.", hotRisk:"🌡️ Heat reduces fruit quality. Sunburn on fruit above 35°C. Ensure canopy cover.", coldRisk:"❄️ Apple needs chilling hours (< 7°C) for flowering. Monitor frost during bloom.", rainRisk:"⛈️ Black Rot infection occurs through wounds during rain. Prune dead wood before rains.", dryRisk:"☀️ Cedar Apple Rust still active via wind. Monitor even in dry weather." },
+  rice:    { temp:"22–30°C", soil:"Clay / clay loam, pH 5.5–6.5", water:"Flooded (5–10 cm standing water)", season:"Kharif (Jun–Nov)", commonDiseases:["Bacterial Leaf Blight","Brown Spot","Leaf Smut"], humidRisk:"🍄 Bacterial Leaf Blight and Brown Spot worsen in high humidity. Drain fields and apply Copper Oxychloride.", hotRisk:"🌡️ Spikelet sterility above 35°C during heading. Maintain water level to cool crop.", coldRisk:"❄️ Cold temperature during flowering causes empty grains. Drain and re-flood to warm soil.", rainRisk:"⛈️ Heavy rain washes away fertilizer. Reapply after rain. Watch for Bacterial Blight.", dryRisk:"☀️ Maintain 5 cm water level. Dry conditions reduce Blight risk." },
+  wheat:   { temp:"12–25°C", soil:"Well-drained loamy, pH 6–7.5", water:"Irrigation at crown root, tillering, grain fill", season:"Rabi (Nov–Apr)", commonDiseases:["Leaf Rust","Stem Rust","Yellow Rust","Powdery Mildew"], humidRisk:"🍄 All rust diseases (Leaf, Stem, Yellow) spread rapidly above 70% humidity. Apply Propiconazole immediately.", hotRisk:"🌡️ Grain shriveling above 30°C during grain fill. Early maturity. Terminal heat stress.", coldRisk:"❄️ Frost at heading causes sterility. Irrigate before frost event to protect.", rainRisk:"⛈️ Yellow Rust spores travel long distances with wind + rain. Scout every 3 days post-rain.", dryRisk:"☀️ Low fungal risk. Focus on Aphid scouting and irrigation scheduling." },
+  mango:   { temp:"24–30°C", soil:"Deep well-drained loamy, pH 5.5–7.5", water:"Less during flowering, more during fruit development", season:"Harvest Apr–Jun", commonDiseases:["Anthracnose","Powdery Mildew","Bacterial Black Spot"], humidRisk:"🍄 Anthracnose is critical in high humidity at flowering. Spray Carbendazim before panicle emergence.", hotRisk:"🌡️ Good for fruit development. Spongy tissue disorder risk in some varieties above 40°C.", coldRisk:"❄️ Flowering triggered by cool nights (< 15°C). Protect from unexpected frost.", rainRisk:"⛈️ Do NOT spray during flowering rains — it washes pollen and fungicide. Wait for dry spell.", dryRisk:"☀️ Powdery Mildew (Oidium) remains a risk in dry warm conditions. Apply Wettable Sulphur." }
+};
+const CURRENT_MODULE = "{{ module }}";
+</script>
+
+<div class="page-header">
+    <a href="/predict" style="color:var(--green-300);text-decoration:none;font-size:.9rem;display:inline-block;margin-bottom:1rem">
+        ← Back to All Crops
+    </a>
+    <h1>{{ module_data.icon }} {{ module_data.name }} Disease Detection</h1>
+    <p>Upload a leaf or fruit image — our AI will identify the disease and suggest treatment</p>
+</div>
+
+<!-- Detectable Diseases Bar -->
+<div style="background:var(--white);border-bottom:1px solid var(--gray-200);padding:1rem 2rem">
+    <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <span style="font-size:.8rem;color:var(--gray-500);font-family:var(--font-mono);white-space:nowrap">DETECTS:</span>
+        {% for c in module_data.classes %}
+        <span style="background:{% if c == 'Healthy' %}var(--green-100);color:var(--green-700){% else %}var(--gray-100);color:var(--gray-600){% endif %};padding:.25rem .75rem;border-radius:50px;font-size:.78rem;font-weight:500">
+            {% if c == 'Healthy' %}✅{% endif %} {{ c }}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ══ CROP INFO + WEATHER RISK PANEL ══ -->
+<div style="background:linear-gradient(135deg,var(--green-50) 0%,#f0fdf4 100%);border-bottom:1px solid var(--green-200);padding:1.25rem 2rem">
+    <div style="max-width:1100px;margin:0 auto">
+
+        <!-- Crop Info Row -->
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+            <span style="font-size:1.3rem">🌿</span>
+            <span style="font-weight:700;color:var(--green-800);font-size:1rem">{{ module_data.name }} Crop Info</span>
+        </div>
+        <div id="cropInfoGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-bottom:1.25rem">
+            <div style="background:white;border-radius:10px;padding:.75rem 1rem;border:1px solid var(--green-200)">
+                <div style="font-size:.7rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.3rem">🌡️ IDEAL TEMP</div>
+                <div style="font-weight:600;color:var(--gray-800);font-size:.9rem" id="ci-temp">—</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:.75rem 1rem;border:1px solid var(--green-200)">
+                <div style="font-size:.7rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.3rem">💧 WATER NEEDS</div>
+                <div style="font-weight:600;color:var(--gray-800);font-size:.9rem" id="ci-water">—</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:.75rem 1rem;border:1px solid var(--green-200)">
+                <div style="font-size:.7rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.3rem">🌱 SOIL TYPE</div>
+                <div style="font-weight:600;color:var(--gray-800);font-size:.9rem" id="ci-soil">—</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:.75rem 1rem;border:1px solid var(--green-200)">
+                <div style="font-size:.7rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.3rem">📅 SEASON</div>
+                <div style="font-weight:600;color:var(--gray-800);font-size:.9rem" id="ci-season">—</div>
+            </div>
+            <div style="background:white;border-radius:10px;padding:.75rem 1rem;border:1px solid var(--green-200);grid-column:span 1">
+                <div style="font-size:.7rem;color:var(--gray-400);font-family:var(--font-mono);margin-bottom:.3rem">🦠 COMMON DISEASES</div>
+                <div style="font-weight:600;color:var(--gray-800);font-size:.85rem;line-height:1.5" id="ci-diseases">—</div>
+            </div>
+        </div>
+
+        <!-- Weather Risk Alert -->
+        <div id="weatherRiskPanel" style="display:none;border-radius:12px;padding:1rem 1.25rem;border:2px solid;display:flex;align-items:flex-start;gap:.75rem">
+            <div style="font-size:1.4rem;flex-shrink:0" id="wrIcon">⚠️</div>
+            <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.3rem">
+                    <strong id="wrTitle" style="font-size:.95rem">Weather Risk Alert</strong>
+                    <span id="wrWeatherBadge" style="font-size:.75rem;padding:.2rem .6rem;border-radius:50px;font-weight:600"></span>
+                    <span id="wrCropBadge" style="font-size:.75rem;padding:.2rem .6rem;border-radius:50px;font-weight:600;background:var(--green-100);color:var(--green-700)">{{ module_data.icon }} {{ module_data.name }}</span>
+                </div>
+                <p id="wrMessage" style="font-size:.88rem;margin:0;line-height:1.6"></p>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+                <div style="font-size:.7rem;color:inherit;opacity:.6">Current weather</div>
+                <div id="wrWeatherVal" style="font-weight:700;font-size:1rem"></div>
+            </div>
+        </div>
+
+        <!-- Weather loading / not available -->
+        <div id="weatherRiskLoading" style="font-size:.82rem;color:var(--gray-400);display:flex;align-items:center;gap:.5rem">
+            <i class="fas fa-spinner fa-spin"></i> Fetching live weather for risk analysis...
+        </div>
+        <div id="weatherRiskError" style="display:none;font-size:.82rem;color:var(--gray-400)">
+            🌐 Weather unavailable — <a href="/weather" style="color:var(--green-600)">check Weather page</a> for manual advisory.
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Credit Status Banner ── -->
+{% if user %}
+<div style="background:white;border-bottom:1px solid var(--gray-100);padding:.75rem 2rem">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <span style="font-size:.8rem;font-weight:700;color:var(--gray-500)">⚡ {{ t('credits_remaining') }}:</span>
+    <div style="flex:1;max-width:200px">
+      <div style="height:8px;border-radius:4px;background:var(--gray-100);overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:{% if user.credits < 25 %}#ef4444{% elif user.credits < 50 %}#f97316{% else %}var(--green-500){% endif %};width:{{ [(user.credits / 200 * 100)|int, 100]|min }}%"></div>
+      </div>
+    </div>
+    <span style="font-weight:700;color:{% if user.credits < 25 %}#dc2626{% else %}var(--green-700){% endif %}">{{ user.credits }} credits</span>
+    <span style="font-size:.78rem;color:var(--gray-400)">({{ t('each_prediction') }})</span>
+    <a href="/plans" style="margin-left:auto;font-size:.82rem;color:var(--green-600);font-weight:600;text-decoration:none"><i class="fas fa-crown"></i> {{ t('upgrade_now') }}</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── No Credits Modal ── -->
+{% if credit_error %}
+<div class="modal-overlay show" id="creditModal">
+  <div class="modal-box">
+    <div style="font-size:3rem;margin-bottom:.75rem">😔</div>
+    <h3>{{ t('no_credits_title') }}</h3>
+    <p>{{ t('no_credits_msg') }}</p>
+    <div class="modal-actions">
+      <a href="/plans" class="btn btn-primary"><i class="fas fa-crown"></i> {{ t('upgrade_now') }}</a>
+      <button onclick="document.getElementById('creditModal').classList.remove('show')" class="btn btn-outline">Close</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="predict-layout">
+    <!-- Upload Section -->
+    <div class="upload-section">
+        <h2 style="font-family:var(--font-display);font-size:1.6rem;margin-bottom:.5rem">{{ t('upload_image') }}</h2>
+        <p style="color:var(--gray-500);margin-bottom:1.5rem;font-size:.9rem">Supports JPG, PNG, JPEG up to 16MB</p>
+
+        {% if not user %}
+        <!-- Not logged in gate -->
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px dashed var(--green-400);border-radius:16px;padding:2.5rem;text-align:center;margin-bottom:1.5rem">
+          <div style="font-size:3rem;margin-bottom:.75rem">🌱</div>
+          <h3 style="color:var(--green-800);margin-bottom:.5rem">{{ t('login_required') }}</h3>
+          <p style="color:var(--green-600);font-size:.9rem;margin-bottom:1.5rem">{{ t('signup_free_credits') }}</p>
+          <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="/login" class="btn btn-outline"><i class="fas fa-sign-in-alt"></i> {{ t('login_to_predict') }}</a>
+            <a href="/signup" class="btn btn-primary"><i class="fas fa-user-plus"></i> {{ t('signup_to_predict') }}</a>
+          </div>
+        </div>
+        {% else %}
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" name="image" id="imageUpload" accept="image/*" required>
+                <div class="upload-icon">📷</div>
+                <h3>Drag & Drop or Click to Upload</h3>
+                <p>Clear, well-lit photo of affected leaf/fruit</p>
+            </div>
+            <div class="upload-preview" id="previewContainer">
+                <img id="previewImg" src="" alt="Preview" style="border-radius:var(--radius-md);width:100%;max-height:260px;object-fit:cover;margin-bottom:1rem">
+                <button type="button" onclick="document.getElementById('imageUpload').click()" class="btn btn-outline" style="width:100%;margin-bottom:.75rem;color:var(--gray-700);border-color:var(--gray-300)">
+                    <i class="fas fa-sync"></i> Change Image
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.5rem" id="analyseBtn">
+                <i class="fas fa-microscope"></i> Analyse Disease
+            </button>
+        </form>
+
+        <!-- Tips -->
+        <div style="margin-top:2rem;padding:1.5rem;background:var(--green-50);border-radius:var(--radius-md);border:1px solid var(--green-200)">
+            <h4 style="color:var(--green-700);margin-bottom:1rem;font-size:.95rem">📸 Photo Tips</h4>
+            <ul style="color:var(--gray-600);font-size:.85rem;line-height:2;list-style:none">
+                <li>✅ Use good natural lighting</li>
+                <li>✅ Focus on the affected area clearly</li>
+                <li>✅ Include both healthy and diseased parts</li>
+                <li>❌ Avoid shadows or blurry shots</li>
+                <li>❌ Don't cover the disease spots with fingers</li>
+            </ul>
+        </div>
+        {% endif %}{# end user check #}
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section">
+        <h2 style="font-family:var(--font-display);font-size:1.6rem;margin-bottom:1.5rem">{{ t('result_disease') if result else 'Detection Result' }}</h2>
+
+        {% if result %}
+        <!-- Uploaded Image -->
+        <div style="margin-bottom:1.5rem">
+            <img src="data:{{ result.mime }};base64,{{ result.image_b64 }}" alt="Uploaded"
+                 style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--radius-md);border:2px solid var(--gray-200)">
+        </div>
+
+        <!-- Result Header -->
+        <div class="result-header {{ 'result-healthy' if result.is_healthy else 'result-disease' }}">
+            <div class="r-icon">{{ '✅' if result.is_healthy else '⚠️' }}</div>
+            <div>
+                <div class="r-label">DIAGNOSIS</div>
+                <div class="r-name">{{ result.disease }}</div>
+                <div class="r-conf">{{ result.confidence }}% confidence</div>
+            </div>
+            <div style="margin-left:auto">
+                <span class="severity-badge sev-{{ result.severity }}">{{ result.severity }}</span>
+            </div>
+        </div>
+
+        <!-- Confidence Bar -->
+        <div style="margin-bottom:1.5rem">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.4rem">
+                <span style="color:var(--gray-500)">Confidence Level</span>
+                <span style="font-weight:700;color:var(--green-600)">{{ result.confidence }}%</span>
+            </div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceBar" data-confidence="{{ result.confidence }}" style="width:0%"></div>
+            </div>
+        </div>
+
+        {% if result.treatment %}
+        <!-- Info Grid -->
+        <div class="info-grid" style="margin-bottom:1.5rem">
+            <div class="info-card">
+                <label>CAUSE</label>
+                <p>{{ result.treatment.cause }}</p>
+            </div>
+            <div class="info-card">
+                <label>SEVERITY</label>
+                <p><span class="severity-badge sev-{{ result.severity }}">{{ result.severity }}</span></p>
+            </div>
+            <div class="info-card" style="grid-column:1/-1">
+                <label>SYMPTOMS</label>
+                <p>{{ result.treatment.symptoms }}</p>
+            </div>
+        </div>
+
+        <!-- Treatment -->
+        {% if not result.is_healthy %}
+        <div class="treatment-box">
+            <h4><i class="fas fa-prescription-bottle"></i> Recommended Treatment</h4>
+            <p class="treat-label">TREATMENT</p>
+            <p>{{ result.treatment.treatment }}</p>
+            <p class="treat-label" style="margin-top:.75rem">PREVENTION</p>
+            <p>{{ result.treatment.prevention }}</p>
+        </div>
+        {% else %}
+        <div style="background:var(--green-100);border:1px solid var(--green-300);border-radius:var(--radius-md);padding:1.5rem;text-align:center">
+            <div style="font-size:2rem;margin-bottom:.5rem">🌿</div>
+            <h4 style="color:var(--green-700);margin-bottom:.5rem">Your Plant is Healthy!</h4>
+            <p style="color:var(--green-600);font-size:.9rem">Continue regular care and monitor periodically.</p>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Actions -->
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap">
+            <a href="/predict/{{ module }}" class="btn btn-outline" style="flex:1;justify-content:center;color:var(--gray-700);border-color:var(--gray-300)">
+                <i class="fas fa-redo"></i> New Prediction
+            </a>
+            <a href="/disease-library" class="btn btn-primary" style="flex:1;justify-content:center">
+                <i class="fas fa-book"></i> Learn More
+            </a>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="result-empty">
+            <div class="result-icon">🔬</div>
+            <h3 style="font-size:1.3rem;margin-bottom:.5rem;color:var(--gray-600)">Awaiting Image</h3>
+            <p style="font-size:.9rem">Upload a {{ module_data.name }} leaf or fruit image to get started</p>
+            <div style="margin-top:2rem;text-align:left;max-width:300px;margin-left:auto;margin-right:auto">
+                <p style="font-size:.8rem;color:var(--gray-400);margin-bottom:.5rem;font-family:var(--font-mono)">DETECTABLE DISEASES:</p>
+                {% for c in module_data.classes %}
+                <div style="padding:.4rem 0;border-bottom:1px solid var(--gray-100);font-size:.85rem;color:var(--gray-500);display:flex;align-items:center;gap:.5rem">
+                    {{ '✅' if c == 'Healthy' else '🔴' }} {{ c }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Other Modules -->
+<section style="background:var(--white);padding:4rem 2rem">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">More Modules</span>
+            <h2 class="section-title" style="font-size:2rem">Try Other Crops</h2>
+        </div>
+        <div class="modules-grid">
+            {% for key, mod in disease_data.items() %}
+            {% if key != module %}
+            <a href="/predict/{{ key }}" class="module-card">
+                <div class="module-card-img">{{ mod.icon }}</div>
+                <div class="module-card-body">
+                    <h3>{{ mod.name }}</h3>
+                    <p>{{ mod.classes|length - 1 }} diseases</p>
+                </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<script>
+// ── Fill Crop Info Cards ────────────────────────────────────────────────────
+(function() {
+    const meta = CROP_META[CURRENT_MODULE];
+    if (!meta) return;
+    document.getElementById('ci-temp').textContent    = meta.temp;
+    document.getElementById('ci-water').textContent   = meta.water;
+    document.getElementById('ci-soil').textContent    = meta.soil;
+    document.getElementById('ci-season').textContent  = meta.season;
+    document.getElementById('ci-diseases').innerHTML  = meta.commonDiseases.map(d => `<span style="display:inline-block;background:var(--red-50,#fef2f2);color:#b91c1c;border-radius:4px;padding:.1rem .4rem;font-size:.78rem;margin:.1rem .2rem .1rem 0">${d}</span>`).join('');
+})();
+
+// ── Weather Risk Integration ────────────────────────────────────────────────
+(function() {
+    const meta      = CROP_META[CURRENT_MODULE];
+    const panel     = document.getElementById('weatherRiskPanel');
+    const loading   = document.getElementById('weatherRiskLoading');
+    const errEl     = document.getElementById('weatherRiskError');
+
+    function wmoToCondition(code) {
+        if (code >= 80) return 'rain';
+        if (code >= 51) return 'rain';
+        if (code >= 45) return 'humid';
+        if (code === 3)  return 'humid';
+        return null; // clear/partly cloudy — decide by humidity/temp below
+    }
+
+    function showRisk(type, weatherLabel, weatherVal) {
+        const configs = {
+            humid: { bg:'#fef9c3', border:'#f59e0b', titleColor:'#92400e', badgeBg:'#fef3c7', badgeColor:'#b45309', icon:'🌫️', title:'⚠️ High Fungal Disease Risk' },
+            hot:   { bg:'#fff7ed', border:'#f97316', titleColor:'#9a3412', badgeBg:'#ffedd5', badgeColor:'#c2410c', icon:'🌡️', title:'🌡️ Heat Stress Risk' },
+            cold:  { bg:'#eff6ff', border:'#3b82f6', titleColor:'#1e3a8a', badgeBg:'#dbeafe', badgeColor:'#1d4ed8', icon:'❄️', title:'❄️ Cold Weather Risk' },
+            rain:  { bg:'#f0fdf4', border:'#16a34a', titleColor:'#14532d', badgeBg:'#dcfce7', badgeColor:'#15803d', icon:'🌧️', title:'🌧️ Rain Disease Alert' },
+            ok:    { bg:'#f0fdf4', border:'#22c55e', titleColor:'#14532d', badgeBg:'#dcfce7', badgeColor:'#16a34a', icon:'✅', title:'✅ Favorable Conditions' },
+        };
+        const c = configs[type] || configs.ok;
+        const message = meta[type + 'Risk'] || (type === 'ok' ? meta.dryRisk : '');
+
+        panel.style.background   = c.bg;
+        panel.style.borderColor  = c.border;
+        document.getElementById('wrIcon').textContent    = c.icon;
+        document.getElementById('wrTitle').textContent   = c.title;
+        document.getElementById('wrTitle').style.color   = c.titleColor;
+        document.getElementById('wrMessage').textContent = message;
+        document.getElementById('wrMessage').style.color = c.titleColor;
+
+        const wb = document.getElementById('wrWeatherBadge');
+        wb.textContent       = weatherLabel;
+        wb.style.background  = c.badgeBg;
+        wb.style.color       = c.badgeColor;
+
+        document.getElementById('wrWeatherVal').textContent = weatherVal;
+        document.getElementById('wrWeatherVal').style.color = c.titleColor;
+
+        panel.style.display = 'flex';
+        loading.style.display = 'none';
+    }
+
+    function classifyWeather(temp, humidity, windspeed, wCode) {
+        const condition = wmoToCondition(wCode);
+        if (condition === 'rain') return ['rain', '🌧️ Rain / Storm', `${temp}°C`];
+        if (humidity > 70)       return ['humid', `💧 Humidity ${humidity}%`, `${temp}°C`];
+        if (temp > 35)           return ['hot',   `🌡️ ${temp}°C`, `${humidity}% RH`];
+        if (temp < 15)           return ['cold',  `❄️ ${temp}°C`, `${humidity}% RH`];
+        return ['ok', `☀️ ${temp}°C, ${humidity}% RH`, `${windspeed} km/h wind`];
+    }
+
+    // Auto-detect location → fetch real weather
+    async function loadWeatherRisk() {
+        try {
+            let lat = 18.5204, lon = 73.8567; // Default: Pune
+            let locationName = 'Pune, Maharashtra';
+
+            // Try geolocation first
+            if (navigator.geolocation) {
+                await new Promise((res) => {
+                    navigator.geolocation.getCurrentPosition(
+                        p => { lat = p.coords.latitude; lon = p.coords.longitude; res(); },
+                        () => res(), // on deny, use default
+                        { timeout: 4000 }
+                    );
+                });
+            }
+
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`;
+            const r   = await fetch(url);
+            if (!r.ok) throw new Error();
+            const d = await r.json();
+            const c = d.current;
+            const [type, label, val] = classifyWeather(
+                Math.round(c.temperature_2m),
+                c.relative_humidity_2m,
+                Math.round(c.wind_speed_10m),
+                c.weather_code
+            );
+            showRisk(type, label, val);
+        } catch {
+            loading.style.display = 'none';
+            errEl.style.display   = 'block';
+        }
+    }
+
+    loadWeatherRisk();
+})();
+
+// ── Form submit spinner ────────────────────────────────────────────────────
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('analyseBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analysing...';
+});
+</script>
+
+{% endblock %}

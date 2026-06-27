@@ -1,0 +1,6 @@
+{
+  "0": "Tomato Mosaic Virus",
+  "1": "Tomato Healthy",
+  "2": "Potato Early Blight",
+  "3": "Potato Healthy"
+}

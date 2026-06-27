@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin_panel') }} - KisanMitra{% endblock %}
+{% block extra_css %}
+<style>
+.admin-page { max-width:1200px; margin:0 auto; padding:2rem 1.25rem 5rem; }
+.admin-topbar { display:flex; align-items:center; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; }
+.admin-topbar h1 { font-size:1.8rem; font-family:var(--font-display); color:var(--green-900); margin:0; flex:1; }
+.admin-nav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; color:var(--gray-600); border:1.5px solid var(--gray-200); transition:.2s; background:white; }
+.admin-nav a:hover, .admin-nav a.active { background:var(--green-600); color:white; border-color:var(--green-600); }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.25rem; margin-bottom:2rem; }
+.kpi-card { background:white; border-radius:16px; padding:1.5rem; border:1px solid var(--gray-200); box-shadow:0 2px 8px rgba(0,0,0,.04); display:flex; align-items:center; gap:1rem; }
+.kpi-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+.kpi-val { font-size:2rem; font-weight:900; color:var(--green-700); line-height:1; }
+.kpi-lbl { font-size:.8rem; color:var(--gray-500); margin-top:.2rem; }
+.admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+@media(max-width:768px){ .admin-grid { grid-template-columns:1fr; } }
+.admin-card { background:white; border-radius:16px; border:1px solid var(--gray-200); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.admin-card-head { padding:1rem 1.25rem; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+.admin-card-head h3 { margin:0; font-size:.95rem; color:var(--gray-800); font-weight:700; }
+.admin-card-head a { font-size:.8rem; color:var(--green-600); text-decoration:none; font-weight:600; }
+.admin-card-head a:hover { text-decoration:underline; }
+.admin-table { width:100%; border-collapse:collapse; }
+.admin-table th { background:var(--gray-50); padding:.6rem .9rem; font-size:.75rem; color:var(--gray-500); text-align:left; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+.admin-table td { padding:.7rem .9rem; border-top:1px solid var(--gray-100); font-size:.85rem; color:var(--gray-700); vertical-align:middle; }
+.admin-table tr:hover td { background:var(--green-50); }
+.badge-admin { background:#7c3aed; color:white; font-size:.68rem; padding:.15rem .5rem; border-radius:4px; font-weight:700; }
+.badge-user { background:var(--green-100); color:var(--green-700); font-size:.68rem; padding:.15rem .5rem; border-radius:4px; font-weight:700; }
+.badge-free { background:var(--gray-100); color:var(--gray-600); font-size:.68rem; padding:.15rem .5rem; border-radius:4px; }
+.badge-basic { background:#dcfce7; color:#15803d; font-size:.68rem; padding:.15rem .5rem; border-radius:4px; }
+.badge-pro { background:#fef9c3; color:#a16207; font-size:.68rem; padding:.15rem .5rem; border-radius:4px; }
+.badge-enterprise { background:#ede9fe; color:#7c3aed; font-size:.68rem; padding:.15rem .5rem; border-radius:4px; }
+.empty-row td { text-align:center; color:var(--gray-400); padding:1.5rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+
+    <div class="admin-topbar">
+        <div>
+            <p style="margin:0;font-size:.8rem;color:var(--gray-400)">Logged in as {{ user.name }} · Admin</p>
+            <h1>🛡️ {{ t('admin_panel') }}</h1>
+        </div>
+        <a href="/" class="btn btn-outline" style="color:var(--gray-600);border-color:var(--gray-300)">← Back to Site</a>
+    </div>
+
+    <!-- Admin Nav -->
+    <div class="admin-nav">
+        <a href="/admin" class="active">📊 {{ t('admin_dashboard') }}</a>
+        <a href="/admin/users">👥 {{ t('admin_users') }}</a>
+        <a href="/admin/predictions">🔬 {{ t('admin_predictions') }}</a>
+        <a href="/admin/feedback">⭐ {{ t('admin_feedback') }}</a>
+        <a href="/admin/contacts">📬 {{ t('admin_contacts') }}</a>
+        <a href="/admin/create-admin" style="background:#7c3aed;color:white;border-color:#7c3aed">➕ {{ t('admin_create_admin') }}</a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#dcfce7">👥</div>
+            <div>
+                <div class="kpi-val">{{ stats.total_users }}</div>
+                <div class="kpi-lbl">{{ t('admin_total_users') }}</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#dbeafe">🔬</div>
+            <div>
+                <div class="kpi-val">{{ stats.total_scans }}</div>
+                <div class="kpi-lbl">{{ t('admin_total_scans') }}</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#fef9c3">⭐</div>
+            <div>
+                <div class="kpi-val">{{ stats.total_feedback }}</div>
+                <div class="kpi-lbl">{{ t('admin_total_feedback') }}</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#ede9fe">📬</div>
+            <div>
+                <div class="kpi-val">{{ stats.total_contacts }}</div>
+                <div class="kpi-lbl">{{ t('admin_total_contacts') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-grid">
+        <!-- Recent Users -->
+        <div class="admin-card">
+            <div class="admin-card-head">
+                <h3>👥 Recent Users</h3>
+                <a href="/admin/users">View All →</a>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Plan</th>
+                        <th>Credits</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:600">{{ u.name }}</div>
+                            <div style="font-size:.75rem;color:var(--gray-400)">{{ u.email }}</div>
+                        </td>
+                        <td><span class="badge-{{ u.plan }}">{{ u.plan }}</span></td>
+                        <td>⚡ {{ u.credits }}</td>
+                        <td>
+                            {% if u.is_admin %}<span class="badge-admin">Admin</span>
+                            {% else %}<span class="badge-user">User</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="4">No users yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="admin-card">
+            <div class="admin-card-head">
+                <h3>🔬 Recent Predictions</h3>
+                <a href="/admin/predictions">View All →</a>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Crop</th>
+                        <th>Disease</th>
+                        <th>Conf.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_preds %}
+                    <tr>
+                        <td style="font-size:.8rem">{{ p.user_name or '—' }}</td>
+                        <td><span class="badge-user">{{ p.module }}</span></td>
+                        <td style="font-size:.8rem">{{ p.disease }}</td>
+                        <td>{{ '%.0f'|format(p.confidence * 100) }}%</td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="4">No predictions yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

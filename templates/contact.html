@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ t('contact_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ t('contact_title') }}</h1>
+    <p>{{ t('contact_sub') }}</p>
+</div>
+
+<div class="form-grid">
+    <!-- Contact Form -->
+    <div class="form-card">
+        <h2>{{ t('send_message') }}</h2>
+        <p>{{ t('contact_form_sub') }}</p>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{{ t('full_name') }}</label>
+                    <input type="text" name="name" class="form-control" placeholder="{{ t('signup_name') }}" required>
+                </div>
+                <div class="form-group">
+                    <label>{{ t('email_label') }}</label>
+                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>{{ t('phone_label') }}</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group">
+                    <label>{{ t('subject_label') }}</label>
+                    <select name="subject" class="form-control">
+                        <option>{{ t('subj_general') }}</option>
+                        <option>{{ t('subj_support') }}</option>
+                        <option>{{ t('subj_detection') }}</option>
+                        <option>{{ t('subj_research') }}</option>
+                        <option>{{ t('subj_bug') }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ t('message_label') }}</label>
+                <textarea name="message" class="form-control" rows="5" placeholder="{{ t('msg_placeholder') }}" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-paper-plane"></i> {{ t('send_btn') }}
+            </button>
+        </form>
+    </div>
+
+    <!-- Contact Info -->
+    <div>
+        <div class="form-card" style="margin-bottom:1.5rem">
+            <h2>{{ t('get_in_touch') }}</h2>
+            <p>{{ t('reach_us') }}</p>
+            <div style="display:flex;flex-direction:column;gap:1.25rem;margin-top:1rem">
+                <div style="display:flex;align-items:flex-start;gap:1rem">
+                    <div style="width:44px;height:44px;background:var(--green-100);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green-600);flex-shrink:0"><i class="fas fa-envelope"></i></div>
+                    <div><strong style="display:block;margin-bottom:.25rem">Email</strong><span style="color:var(--gray-500);font-size:.9rem">kisanmitra@agri.in</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem">
+                    <div style="width:44px;height:44px;background:var(--green-100);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green-600);flex-shrink:0"><i class="fas fa-phone"></i></div>
+                    <div><strong style="display:block;margin-bottom:.25rem">{{ t('phone_hours') }}</strong><span style="color:var(--gray-500);font-size:.9rem">+91 9623350670 / 8767945534</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem">
+                    <div style="width:44px;height:44px;background:var(--green-100);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green-600);flex-shrink:0"><i class="fas fa-map-marker-alt"></i></div>
+                    <div><strong style="display:block;margin-bottom:.25rem">{{ t('location_label') }}</strong><span style="color:var(--gray-500);font-size:.9rem">{{ t('location_val') }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--green-800),var(--green-600));border-radius:var(--radius-xl);padding:2rem;color:var(--white)">
+            <h3 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:1rem">🏆 Final Year Project 2026</h3>
+            <p style="color:rgba(255,255,255,.8);font-size:.9rem;line-height:1.7">Computer Engineering — SPPU affiliated college, Pune, Maharashtra</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

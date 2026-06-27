@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ t('weather_title') }} - KisanMitra{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <span class="section-label" style="color:var(--green-300)">{{ t('weather_label') }}</span>
+    <h1>{{ t('weather_title') }}</h1>
+    <p>{{ t('weather_sub') }}</p>
+</div>
+
+<section class="section">
+    <div class="container" style="max-width:800px">
+        <div class="weather-widget">
+            <div class="weather-search">
+                <form id="weatherForm" style="display:flex;gap:1rem;width:100%">
+                    <input type="text" id="cityInput" class="weather-input" placeholder="{{ t('weather_placeholder') }}" value="Pune">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> {{ t('get_weather') }}
+                    </button>
+                </form>
+            </div>
+
+            <div id="weatherResult" style="display:none">
+                <div class="weather-main">
+                    <div class="weather-icon" id="wIcon">☀️</div>
+                    <div class="weather-temp" id="wTemp">28°C</div>
+                    <div class="weather-city" id="wCity">Pune</div>
+                    <div style="color:rgba(255,255,255,.6);font-size:.9rem" id="wDesc">Sunny</div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail"><div class="wd-val" id="wHumidity">--</div><div class="wd-key">{{ t('humidity') }}</div></div>
+                    <div class="weather-detail"><div class="wd-val" id="wWind">--</div><div class="wd-key">{{ t('wind') }}</div></div>
+                    <div class="weather-detail"><div class="wd-val" id="wUV">--</div><div class="wd-key">{{ t('uv_index') }}</div></div>
+                </div>
+                <div style="padding:1.5rem 2rem;border-top:1px solid rgba(255,255,255,.1)">
+                    <div style="background:rgba(255,255,255,.1);border-radius:var(--radius-md);padding:1.25rem">
+                        <h4 style="color:rgba(255,255,255,.9);margin-bottom:.5rem;font-size:.95rem">{{ t('disease_advisory') }}</h4>
+                        <p style="color:rgba(255,255,255,.7);font-size:.9rem" id="weatherAdvisory">—</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disease Risk Table -->
+        <div style="background:var(--white);border-radius:var(--radius-xl);padding:2rem;margin-top:2rem;box-shadow:var(--shadow-md)">
+            <h3 style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:1.5rem;color:var(--gray-900)">
+                {{ t('risk_guide_title') }}
+            </h3>
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('condition') }}</th>
+                        <th>{{ t('risk_level') }}</th>
+                        <th>{{ t('likely_disease') }}</th>
+                        <th>{{ t('action') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ t('weather_placeholder') | replace('Enter city (e.g. Pune, Nashik, Nagpur)','') }}Humidity &gt;75%</td>
+                        <td><span class="severity-badge sev-High">High</span></td>
+                        <td>Late Blight, Leaf Mold</td>
+                        <td>{{ t('weather_tip1') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Temp &gt;35°C</td>
+                        <td><span class="severity-badge sev-Medium">Medium</span></td>
+                        <td>Spider Mites, Mosaic Virus</td>
+                        <td>{{ t('weather_tip2') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Low Temp &lt;15°C</td>
+                        <td><span class="severity-badge sev-Medium">Medium</span></td>
+                        <td>Rust diseases</td>
+                        <td>{{ t('weather_tip3') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Leaf Wetness &gt;6h</td>
+                        <td><span class="severity-badge sev-High">High</span></td>
+                        <td>Fungal infections</td>
+                        <td>{{ t('weather_tip4') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tips -->
+        <div style="background:var(--green-50);border-radius:var(--radius-xl);padding:2rem;margin-top:2rem;border:1px solid var(--green-200)">
+            <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:1.25rem;color:var(--green-800)">{{ t('weather_tip_title') }}</h3>
+            <ul style="list-style:none;line-height:2;color:var(--green-700);font-size:.95rem">
+                <li>✅ {{ t('weather_tip1') }}</li>
+                <li>✅ {{ t('weather_tip2') }}</li>
+                <li>✅ {{ t('weather_tip3') }}</li>
+                <li>✅ {{ t('weather_tip4') }}</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+const ADV_HIGH_HUMIDITY = {{ t('adv_high_humidity')|tojson }};
+const ADV_HIGH_TEMP = {{ t('adv_high_temp')|tojson }};
+const ADV_NORMAL = {{ t('adv_normal')|tojson }};
+</script>
+<script>
+const weatherForm2 = document.getElementById('weatherForm');
+if (weatherForm2) {
+    weatherForm2.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const city = document.getElementById('cityInput').value.trim();
+        if (!city) return;
+        const mockWeather = {
+            'Mumbai': { temp: 31, icon: '⛅', desc: 'Partly Cloudy', humidity: 78, wind: 18, uv: 7 },
+            'Pune': { temp: 28, icon: '☀️', desc: 'Sunny', humidity: 55, wind: 12, uv: 8 },
+            'Delhi': { temp: 38, icon: '🌤', desc: 'Hot & Hazy', humidity: 42, wind: 8, uv: 9 },
+            'Nagpur': { temp: 36, icon: '☀️', desc: 'Clear Sky', humidity: 38, wind: 14, uv: 10 },
+            'Nashik': { temp: 27, icon: '🌥', desc: 'Cloudy', humidity: 65, wind: 16, uv: 6 },
+        };
+        const w = mockWeather[city] || { temp: Math.round(25+Math.random()*15), icon: '🌤', desc: 'Partly Cloudy', humidity: Math.round(40+Math.random()*40), wind: Math.round(8+Math.random()*20), uv: Math.round(5+Math.random()*6) };
+        document.getElementById('wIcon').textContent = w.icon;
+        document.getElementById('wTemp').textContent = w.temp + '°C';
+        document.getElementById('wCity').textContent = city;
+        document.getElementById('wDesc').textContent = w.desc;
+        document.getElementById('wHumidity').textContent = w.humidity + '%';
+        document.getElementById('wWind').textContent = w.wind + ' km/h';
+        document.getElementById('wUV').textContent = w.uv;
+        document.getElementById('weatherResult').style.display = 'block';
+        let adv = '';
+        if (w.humidity > 70) adv = ADV_HIGH_HUMIDITY;
+        else if (w.temp > 35) adv = ADV_HIGH_TEMP;
+        else adv = ADV_NORMAL;
+        document.getElementById('weatherAdvisory').textContent = adv;
+    });
+}
+</script>
+{% endblock %}
